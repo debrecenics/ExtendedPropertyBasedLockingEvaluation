@@ -98,10 +98,10 @@ public class ClientBehaviorStatemachine implements IClientBehaviorStatemachine {
 	public enum State {
 		main_region_Idle,
 		main_region_Locking,
-		main_region_ModifingWithLock,
+		main_region_ModifyingWithLock,
 		main_region_Unlocking,
 		main_region_ConflictResolution,
-		main_region_ModifingWithoutLock,
+		main_region_ModifyingWithoutLock,
 		$NullState$
 	};
 	
@@ -174,14 +174,14 @@ public class ClientBehaviorStatemachine implements IClientBehaviorStatemachine {
 			return stateVector[0] == State.main_region_Idle;
 		case main_region_Locking:
 			return stateVector[0] == State.main_region_Locking;
-		case main_region_ModifingWithLock:
-			return stateVector[0] == State.main_region_ModifingWithLock;
+		case main_region_ModifyingWithLock:
+			return stateVector[0] == State.main_region_ModifyingWithLock;
 		case main_region_Unlocking:
 			return stateVector[0] == State.main_region_Unlocking;
 		case main_region_ConflictResolution:
 			return stateVector[0] == State.main_region_ConflictResolution;
-		case main_region_ModifingWithoutLock:
-			return stateVector[0] == State.main_region_ModifingWithoutLock;
+		case main_region_ModifyingWithoutLock:
+			return stateVector[0] == State.main_region_ModifyingWithoutLock;
 		default:
 			return false;
 		}
@@ -251,7 +251,7 @@ public class ClientBehaviorStatemachine implements IClientBehaviorStatemachine {
 		return sCInterface.rejected;
 	}
 	
-	private boolean check_main_region_ModifingWithLock_tr0_tr0() {
+	private boolean check_main_region_ModifyingWithLock_tr0_tr0() {
 		return sCInterface.finishedUnlocked;
 	}
 	
@@ -271,11 +271,11 @@ public class ClientBehaviorStatemachine implements IClientBehaviorStatemachine {
 		return sCInterface.resolved;
 	}
 	
-	private boolean check_main_region_ModifingWithoutLock_tr0_tr0() {
+	private boolean check_main_region_ModifyingWithoutLock_tr0_tr0() {
 		return sCInterface.finishedConflict;
 	}
 	
-	private boolean check_main_region_ModifingWithoutLock_tr1_tr1() {
+	private boolean check_main_region_ModifyingWithoutLock_tr1_tr1() {
 		return sCInterface.finishedSuccess;
 	}
 	
@@ -286,12 +286,12 @@ public class ClientBehaviorStatemachine implements IClientBehaviorStatemachine {
 	
 	private void effect_main_region_Idle_tr1() {
 		exitSequence_main_region_Idle();
-		enterSequence_main_region_ModifingWithoutLock_default();
+		enterSequence_main_region_ModifyingWithoutLock_default();
 	}
 	
 	private void effect_main_region_Locking_tr0() {
 		exitSequence_main_region_Locking();
-		enterSequence_main_region_ModifingWithLock_default();
+		enterSequence_main_region_ModifyingWithLock_default();
 	}
 	
 	private void effect_main_region_Locking_tr1() {
@@ -301,8 +301,8 @@ public class ClientBehaviorStatemachine implements IClientBehaviorStatemachine {
 		enterSequence_main_region_Idle_default();
 	}
 	
-	private void effect_main_region_ModifingWithLock_tr0() {
-		exitSequence_main_region_ModifingWithLock();
+	private void effect_main_region_ModifyingWithLock_tr0() {
+		exitSequence_main_region_ModifyingWithLock();
 		enterSequence_main_region_Unlocking_default();
 	}
 	
@@ -334,23 +334,18 @@ public class ClientBehaviorStatemachine implements IClientBehaviorStatemachine {
 		enterSequence_main_region_Idle_default();
 	}
 	
-	private void effect_main_region_ModifingWithoutLock_tr0() {
-		exitSequence_main_region_ModifingWithoutLock();
+	private void effect_main_region_ModifyingWithoutLock_tr0() {
+		exitSequence_main_region_ModifyingWithoutLock();
 		sCInterface.operationCallback.conflict();
 		
 		enterSequence_main_region_ConflictResolution_default();
 	}
 	
-	private void effect_main_region_ModifingWithoutLock_tr1() {
-		exitSequence_main_region_ModifingWithoutLock();
+	private void effect_main_region_ModifyingWithoutLock_tr1() {
+		exitSequence_main_region_ModifyingWithoutLock();
 		sCInterface.operationCallback.success();
 		
 		enterSequence_main_region_Idle_default();
-	}
-	
-	/* Entry action for state 'Idle'. */
-	private void entryAction_main_region_Idle() {
-		sCInterface.operationCallback.update();
 	}
 	
 	/* Entry action for state 'Locking'. */
@@ -358,8 +353,8 @@ public class ClientBehaviorStatemachine implements IClientBehaviorStatemachine {
 		sCInterface.operationCallback.lock();
 	}
 	
-	/* Entry action for state 'ModifingWithLock'. */
-	private void entryAction_main_region_ModifingWithLock() {
+	/* Entry action for state 'ModifyingWithLock'. */
+	private void entryAction_main_region_ModifyingWithLock() {
 		sCInterface.operationCallback.executeModification();
 	}
 	
@@ -373,14 +368,18 @@ public class ClientBehaviorStatemachine implements IClientBehaviorStatemachine {
 		sCInterface.operationCallback.resolve();
 	}
 	
-	/* Entry action for state 'ModifingWithoutLock'. */
-	private void entryAction_main_region_ModifingWithoutLock() {
+	/* Entry action for state 'ModifyingWithoutLock'. */
+	private void entryAction_main_region_ModifyingWithoutLock() {
 		sCInterface.operationCallback.executeModification();
+	}
+	
+	/* Exit action for state 'Idle'. */
+	private void exitAction_main_region_Idle() {
+		sCInterface.operationCallback.update();
 	}
 	
 	/* 'default' enter sequence for state Idle */
 	private void enterSequence_main_region_Idle_default() {
-		entryAction_main_region_Idle();
 		nextStateIndex = 0;
 		stateVector[0] = State.main_region_Idle;
 	}
@@ -392,11 +391,11 @@ public class ClientBehaviorStatemachine implements IClientBehaviorStatemachine {
 		stateVector[0] = State.main_region_Locking;
 	}
 	
-	/* 'default' enter sequence for state ModifingWithLock */
-	private void enterSequence_main_region_ModifingWithLock_default() {
-		entryAction_main_region_ModifingWithLock();
+	/* 'default' enter sequence for state ModifyingWithLock */
+	private void enterSequence_main_region_ModifyingWithLock_default() {
+		entryAction_main_region_ModifyingWithLock();
 		nextStateIndex = 0;
-		stateVector[0] = State.main_region_ModifingWithLock;
+		stateVector[0] = State.main_region_ModifyingWithLock;
 	}
 	
 	/* 'default' enter sequence for state Unlocking */
@@ -413,11 +412,11 @@ public class ClientBehaviorStatemachine implements IClientBehaviorStatemachine {
 		stateVector[0] = State.main_region_ConflictResolution;
 	}
 	
-	/* 'default' enter sequence for state ModifingWithoutLock */
-	private void enterSequence_main_region_ModifingWithoutLock_default() {
-		entryAction_main_region_ModifingWithoutLock();
+	/* 'default' enter sequence for state ModifyingWithoutLock */
+	private void enterSequence_main_region_ModifyingWithoutLock_default() {
+		entryAction_main_region_ModifyingWithoutLock();
 		nextStateIndex = 0;
-		stateVector[0] = State.main_region_ModifingWithoutLock;
+		stateVector[0] = State.main_region_ModifyingWithoutLock;
 	}
 	
 	/* 'default' enter sequence for region main region */
@@ -429,6 +428,8 @@ public class ClientBehaviorStatemachine implements IClientBehaviorStatemachine {
 	private void exitSequence_main_region_Idle() {
 		nextStateIndex = 0;
 		stateVector[0] = State.$NullState$;
+		
+		exitAction_main_region_Idle();
 	}
 	
 	/* Default exit sequence for state Locking */
@@ -437,8 +438,8 @@ public class ClientBehaviorStatemachine implements IClientBehaviorStatemachine {
 		stateVector[0] = State.$NullState$;
 	}
 	
-	/* Default exit sequence for state ModifingWithLock */
-	private void exitSequence_main_region_ModifingWithLock() {
+	/* Default exit sequence for state ModifyingWithLock */
+	private void exitSequence_main_region_ModifyingWithLock() {
 		nextStateIndex = 0;
 		stateVector[0] = State.$NullState$;
 	}
@@ -455,8 +456,8 @@ public class ClientBehaviorStatemachine implements IClientBehaviorStatemachine {
 		stateVector[0] = State.$NullState$;
 	}
 	
-	/* Default exit sequence for state ModifingWithoutLock */
-	private void exitSequence_main_region_ModifingWithoutLock() {
+	/* Default exit sequence for state ModifyingWithoutLock */
+	private void exitSequence_main_region_ModifyingWithoutLock() {
 		nextStateIndex = 0;
 		stateVector[0] = State.$NullState$;
 	}
@@ -470,8 +471,8 @@ public class ClientBehaviorStatemachine implements IClientBehaviorStatemachine {
 		case main_region_Locking:
 			exitSequence_main_region_Locking();
 			break;
-		case main_region_ModifingWithLock:
-			exitSequence_main_region_ModifingWithLock();
+		case main_region_ModifyingWithLock:
+			exitSequence_main_region_ModifyingWithLock();
 			break;
 		case main_region_Unlocking:
 			exitSequence_main_region_Unlocking();
@@ -479,8 +480,8 @@ public class ClientBehaviorStatemachine implements IClientBehaviorStatemachine {
 		case main_region_ConflictResolution:
 			exitSequence_main_region_ConflictResolution();
 			break;
-		case main_region_ModifingWithoutLock:
-			exitSequence_main_region_ModifingWithoutLock();
+		case main_region_ModifyingWithoutLock:
+			exitSequence_main_region_ModifyingWithoutLock();
 			break;
 		default:
 			break;
@@ -509,10 +510,10 @@ public class ClientBehaviorStatemachine implements IClientBehaviorStatemachine {
 		}
 	}
 	
-	/* The reactions of state ModifingWithLock. */
-	private void react_main_region_ModifingWithLock() {
-		if (check_main_region_ModifingWithLock_tr0_tr0()) {
-			effect_main_region_ModifingWithLock_tr0();
+	/* The reactions of state ModifyingWithLock. */
+	private void react_main_region_ModifyingWithLock() {
+		if (check_main_region_ModifyingWithLock_tr0_tr0()) {
+			effect_main_region_ModifyingWithLock_tr0();
 		}
 	}
 	
@@ -538,13 +539,13 @@ public class ClientBehaviorStatemachine implements IClientBehaviorStatemachine {
 		}
 	}
 	
-	/* The reactions of state ModifingWithoutLock. */
-	private void react_main_region_ModifingWithoutLock() {
-		if (check_main_region_ModifingWithoutLock_tr0_tr0()) {
-			effect_main_region_ModifingWithoutLock_tr0();
+	/* The reactions of state ModifyingWithoutLock. */
+	private void react_main_region_ModifyingWithoutLock() {
+		if (check_main_region_ModifyingWithoutLock_tr0_tr0()) {
+			effect_main_region_ModifyingWithoutLock_tr0();
 		} else {
-			if (check_main_region_ModifingWithoutLock_tr1_tr1()) {
-				effect_main_region_ModifingWithoutLock_tr1();
+			if (check_main_region_ModifyingWithoutLock_tr1_tr1()) {
+				effect_main_region_ModifyingWithoutLock_tr1();
 			}
 		}
 	}
@@ -567,8 +568,8 @@ public class ClientBehaviorStatemachine implements IClientBehaviorStatemachine {
 			case main_region_Locking:
 				react_main_region_Locking();
 				break;
-			case main_region_ModifingWithLock:
-				react_main_region_ModifingWithLock();
+			case main_region_ModifyingWithLock:
+				react_main_region_ModifyingWithLock();
 				break;
 			case main_region_Unlocking:
 				react_main_region_Unlocking();
@@ -576,8 +577,8 @@ public class ClientBehaviorStatemachine implements IClientBehaviorStatemachine {
 			case main_region_ConflictResolution:
 				react_main_region_ConflictResolution();
 				break;
-			case main_region_ModifingWithoutLock:
-				react_main_region_ModifingWithoutLock();
+			case main_region_ModifyingWithoutLock:
+				react_main_region_ModifyingWithoutLock();
 				break;
 			default:
 				// $NullState$

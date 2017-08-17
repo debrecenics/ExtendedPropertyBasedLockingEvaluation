@@ -8,7 +8,7 @@ import org.mondo.collaboration.security.locking.eval.interfaces.ILockingStrategy
 import org.yakindu.scr.clientbehavior.ClientBehaviorStatemachine;
 import org.yakindu.scr.clientbehavior.IClientBehaviorStatemachine;
 
-public class ClientBehavior extends ClientBehaviorStatemachine implements Runnable {
+public class ClientBehavior extends ClientBehaviorStatemachine {
 
 	int successCounter = 0, failureCounter = 0, conflictCounter = 0;
 	private ILockingStrategy locking;
@@ -28,16 +28,12 @@ public class ClientBehavior extends ClientBehaviorStatemachine implements Runnab
 		} else {
 			nextEvent = Event.Modify;
 		}
+		
+		init();
 	}
 
 	private enum Event {
 		RequestLock, Locked, UnlockedConflict, UnlockedSuccess, UnlockedFailure, FinishedUnlock, FinishedConflict, FinishedSuccess, Rejected, Modify, Resolved
-	}
-
-	@Override
-	public void run() {
-		init();
-		runCycle();
 	}
 
 	public void executeNextStep() {
@@ -141,7 +137,7 @@ public class ClientBehavior extends ClientBehaviorStatemachine implements Runnab
 			EObject local = operation.executeModification(origin);
 			server.executeModification(local, origin);
 			
-			if(isStateActive(State.main_region_ModifingWithoutLock)) {
+			if(isStateActive(State.main_region_ModifyingWithoutLock)) {
 				if(server.hasConflict())
 					nextEvent = Event.FinishedConflict;
 				else

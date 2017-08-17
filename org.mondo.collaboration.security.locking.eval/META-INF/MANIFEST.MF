@@ -6,4 +6,5 @@ Bundle-Version: 1.0.0.qualifier
 Export-Package: org.yakindu.scr,
  org.yakindu.scr.clientbehavior
 Require-Bundle: org.eclipse.emf.ecore,
- org.eclipse.emf.compare;bundle-version="3.3.1"
+ org.eclipse.emf.compare;bundle-version="3.3.1",
+ com.google.guava
