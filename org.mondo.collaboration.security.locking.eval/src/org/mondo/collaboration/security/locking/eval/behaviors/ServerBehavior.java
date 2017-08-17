@@ -25,7 +25,7 @@ public class ServerBehavior {
 	
 	public Response unlock(ILock lock) {
 		Response response = Response.SUCCESS;
-		if(!locks.evaluate(local, remote))
+		if(!locks.evaluate(local, remote, lock.getUser()))
 			response = Response.FAILURE;
 		
 		if(hasConflict())

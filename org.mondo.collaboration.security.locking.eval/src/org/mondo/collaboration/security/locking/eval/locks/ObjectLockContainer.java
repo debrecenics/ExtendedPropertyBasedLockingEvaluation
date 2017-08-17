@@ -6,14 +6,16 @@ import org.eclipse.emf.ecore.EObject;
 import org.mondo.collaboration.security.locking.eval.interfaces.ILock;
 import org.mondo.collaboration.security.locking.eval.interfaces.ILockContainer;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
-public class ObjectLockContainers implements ILockContainer {
+public class ObjectLockContainer implements ILockContainer {
 
-	Collection<Object> lockedObjects = Lists.newArrayList();
+	Multimap<String,Object> lockedObjects = ArrayListMultimap.create();
 
 	@Override
-	public boolean evaluate(EObject newModel, EObject currentModel) {
+	public boolean evaluate(EObject newModel, EObject currentModel, String user) {
+		//TODO: evaluate changes
 		return true;
 	}
 
@@ -23,10 +25,10 @@ public class ObjectLockContainers implements ILockContainer {
 			ObjectLock objectLock = (ObjectLock) lock;
 			Collection<Object> objectsToLock = objectLock.getLockedObjects();
 			for (Object object : objectsToLock) {
-				if(lockedObjects.contains(object)) 
+				if(lockedObjects.containsValue(object)) 
 					return false;
 			}
-			lockedObjects.addAll(objectsToLock);
+			lockedObjects.putAll(objectLock.getUser(), objectsToLock);
 			return true;
 		}
 		throw new IllegalArgumentException();
@@ -37,7 +39,7 @@ public class ObjectLockContainers implements ILockContainer {
 		if(lock instanceof ObjectLock) {
 			ObjectLock objectLock = (ObjectLock) lock;
 			Collection<Object> objectsToLock = objectLock.getLockedObjects();
-			lockedObjects.removeAll(objectsToLock);
+			lockedObjects.get(objectLock.getUser()).removeAll(objectsToLock);
 		}
 		throw new IllegalArgumentException();
 	}

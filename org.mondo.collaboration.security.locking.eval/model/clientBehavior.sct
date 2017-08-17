@@ -5,7 +5,7 @@
       <vertices xsi:type="sgraph:Entry" xmi:id="_Rs8tAHtnEeeHBKN0GhwjAQ">
         <outgoingTransitions xmi:id="_RtF28HtnEeeHBKN0GhwjAQ" target="_Rs-iMHtnEeeHBKN0GhwjAQ"/>
       </vertices>
-      <vertices xsi:type="sgraph:State" xmi:id="_Rs-iMHtnEeeHBKN0GhwjAQ" specification="entry / update" name="Idle" incomingTransitions="_RtF28HtnEeeHBKN0GhwjAQ _bku_kHtpEeeHBKN0GhwjAQ _iI9hkHtpEeeHBKN0GhwjAQ _nAAwEHtpEeeHBKN0GhwjAQ _8td7AHtpEeeHBKN0GhwjAQ _RvmRAHtqEeeHBKN0GhwjAQ">
+      <vertices xsi:type="sgraph:State" xmi:id="_Rs-iMHtnEeeHBKN0GhwjAQ" specification="exit / update" name="Idle" incomingTransitions="_RtF28HtnEeeHBKN0GhwjAQ _bku_kHtpEeeHBKN0GhwjAQ _iI9hkHtpEeeHBKN0GhwjAQ _nAAwEHtpEeeHBKN0GhwjAQ _8td7AHtpEeeHBKN0GhwjAQ _RvmRAHtqEeeHBKN0GhwjAQ">
         <outgoingTransitions xmi:id="_QBJAkHtpEeeHBKN0GhwjAQ" specification="requestLock" target="_OAv2IHtpEeeHBKN0GhwjAQ"/>
         <outgoingTransitions xmi:id="_CuTcEHtqEeeHBKN0GhwjAQ" specification="modify" target="_AcvCEHtqEeeHBKN0GhwjAQ"/>
       </vertices>
@@ -13,7 +13,7 @@
         <outgoingTransitions xmi:id="_WBvREHtpEeeHBKN0GhwjAQ" specification="locked" target="_TpiDkHtpEeeHBKN0GhwjAQ"/>
         <outgoingTransitions xmi:id="_nAAwEHtpEeeHBKN0GhwjAQ" specification="rejected / failure" target="_Rs-iMHtnEeeHBKN0GhwjAQ"/>
       </vertices>
-      <vertices xsi:type="sgraph:State" xmi:id="_TpiDkHtpEeeHBKN0GhwjAQ" specification="entry / executeModification" name="ModifingWithLock" incomingTransitions="_WBvREHtpEeeHBKN0GhwjAQ">
+      <vertices xsi:type="sgraph:State" xmi:id="_TpiDkHtpEeeHBKN0GhwjAQ" specification="entry / executeModification" name="ModifyingWithLock" incomingTransitions="_WBvREHtpEeeHBKN0GhwjAQ">
         <outgoingTransitions xmi:id="_Zq03oHtpEeeHBKN0GhwjAQ" specification="finishedUnlocked" target="_XZBNEHtpEeeHBKN0GhwjAQ"/>
       </vertices>
       <vertices xsi:type="sgraph:State" xmi:id="_XZBNEHtpEeeHBKN0GhwjAQ" specification="entry / unlock" name="Unlocking" incomingTransitions="_Zq03oHtpEeeHBKN0GhwjAQ">
@@ -24,7 +24,7 @@
       <vertices xsi:type="sgraph:State" xmi:id="_xmzIkHtpEeeHBKN0GhwjAQ" specification="entry / resolve" name="ConflictResolution" incomingTransitions="_zWMCkHtpEeeHBKN0GhwjAQ _EbevkHtqEeeHBKN0GhwjAQ">
         <outgoingTransitions xmi:id="_8td7AHtpEeeHBKN0GhwjAQ" specification="resolved / success" target="_Rs-iMHtnEeeHBKN0GhwjAQ"/>
       </vertices>
-      <vertices xsi:type="sgraph:State" xmi:id="_AcvCEHtqEeeHBKN0GhwjAQ" specification="entry / executeModification" name="ModifingWithoutLock" incomingTransitions="_CuTcEHtqEeeHBKN0GhwjAQ">
+      <vertices xsi:type="sgraph:State" xmi:id="_AcvCEHtqEeeHBKN0GhwjAQ" specification="entry / executeModification" name="ModifyingWithoutLock" incomingTransitions="_CuTcEHtqEeeHBKN0GhwjAQ">
         <outgoingTransitions xmi:id="_EbevkHtqEeeHBKN0GhwjAQ" specification="finishedConflict / conflict" target="_xmzIkHtpEeeHBKN0GhwjAQ"/>
         <outgoingTransitions xmi:id="_RvmRAHtqEeeHBKN0GhwjAQ" specification="finishedSuccess / success" target="_Rs-iMHtnEeeHBKN0GhwjAQ"/>
       </vertices>
