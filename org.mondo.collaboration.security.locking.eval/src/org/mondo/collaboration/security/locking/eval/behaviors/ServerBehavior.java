@@ -1,14 +1,12 @@
 package org.mondo.collaboration.security.locking.eval.behaviors;
 
 import org.eclipse.emf.compare.Comparison;
-import org.eclipse.emf.compare.EMFCompare;
-import org.eclipse.emf.compare.scope.DefaultComparisonScope;
-import org.eclipse.emf.compare.scope.IComparisonScope;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.ecore.util.EcoreUtil.Copier;
 import org.mondo.collaboration.security.locking.eval.interfaces.ILock;
 import org.mondo.collaboration.security.locking.eval.interfaces.ILockContainer;
+import org.mondo.collaboration.security.locking.eval.utility.ComparisonUtility;
 
 public class ServerBehavior {
 
@@ -35,8 +33,7 @@ public class ServerBehavior {
 	}
 
 	public final boolean hasConflict() {
-		IComparisonScope scope = new DefaultComparisonScope(local, remote, original);
-		Comparison comparison = EMFCompare.builder().build().compare(scope);
+		Comparison comparison = ComparisonUtility.compare(local, remote, original);
 		if(comparison.getConflicts().isEmpty())	
 			return false;
 		return true;
