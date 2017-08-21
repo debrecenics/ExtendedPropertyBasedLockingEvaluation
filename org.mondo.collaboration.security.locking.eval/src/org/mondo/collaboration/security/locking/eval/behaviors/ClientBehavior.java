@@ -137,7 +137,7 @@ public class ClientBehavior extends ClientBehaviorStatemachine {
 			EObject local = operation.executeModification(origin);
 			server.executeModification(local, origin);
 			
-			if(isStateActive(State.main_region_ModifyingWithoutLock)) {
+			if(isStateActive(State.main_region_MODIFY_WITHOUT_LOCK_region_Modifying)) {
 				if(server.hasConflict())
 					nextEvent = Event.FinishedConflict;
 				else
