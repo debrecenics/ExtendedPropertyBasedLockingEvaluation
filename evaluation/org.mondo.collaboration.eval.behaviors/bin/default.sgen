@@ -1,0 +1,29 @@
+GeneratorModel for yakindu::java {
+
+	statechart Server {
+
+		feature Outlet {
+			targetProject = "org.mondo.collaboration.eval.behaviors"
+			targetFolder = "src-gen"
+			libraryTargetFolder = "src-gen"
+		}
+	}
+
+	statechart LockingClient {
+
+		feature Outlet {
+			targetProject = "org.mondo.collaboration.eval.behaviors"
+			targetFolder = "src-gen"
+			libraryTargetFolder = "src-gen"
+		}
+	}
+
+	statechart MergingClient {
+
+		feature Outlet {
+			targetProject = "org.mondo.collaboration.eval.behaviors"
+			targetFolder = "src-gen"
+			libraryTargetFolder = "src-gen"
+		}
+	}
+}

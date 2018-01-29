@@ -47,7 +47,7 @@ public class LockingClientStatemachine implements ILockingClientStatemachine {
 	private boolean initialized = false;
 	
 	public enum State {
-		main_region_IDLE,
+		main_region_Idle,
 		main_region_Execute,
 		main_region_Violation,
 		$NullState$
@@ -124,8 +124,8 @@ public class LockingClientStatemachine implements ILockingClientStatemachine {
 	public boolean isStateActive(State state) {
 	
 		switch (state) {
-		case main_region_IDLE:
-			return stateVector[0] == State.main_region_IDLE;
+		case main_region_Idle:
+			return stateVector[0] == State.main_region_Idle;
 		case main_region_Execute:
 			return stateVector[0] == State.main_region_Execute;
 		case main_region_Violation:
@@ -155,7 +155,7 @@ public class LockingClientStatemachine implements ILockingClientStatemachine {
 		sCInterface.raiseFinish();
 	}
 	
-	private boolean check_main_region_IDLE_tr0_tr0() {
+	private boolean check_main_region_Idle_tr0_tr0() {
 		return sCInterface.request;
 	}
 	
@@ -175,8 +175,8 @@ public class LockingClientStatemachine implements ILockingClientStatemachine {
 		return sCInterface.request;
 	}
 	
-	private void effect_main_region_IDLE_tr0() {
-		exitSequence_main_region_IDLE();
+	private void effect_main_region_Idle_tr0() {
+		exitSequence_main_region_Idle();
 		sCInterface.operationCallback.lock();
 		
 		enterSequence_main_region_Execute_default();
@@ -193,7 +193,7 @@ public class LockingClientStatemachine implements ILockingClientStatemachine {
 		exitSequence_main_region_Execute();
 		sCInterface.operationCallback.release();
 		
-		enterSequence_main_region_IDLE_default();
+		enterSequence_main_region_Idle_default();
 	}
 	
 	private void effect_main_region_Execute_tr2() {
@@ -220,10 +220,10 @@ public class LockingClientStatemachine implements ILockingClientStatemachine {
 		sCInterface.operationCallback.revert();
 	}
 	
-	/* 'default' enter sequence for state IDLE */
-	private void enterSequence_main_region_IDLE_default() {
+	/* 'default' enter sequence for state Idle */
+	private void enterSequence_main_region_Idle_default() {
 		nextStateIndex = 0;
-		stateVector[0] = State.main_region_IDLE;
+		stateVector[0] = State.main_region_Idle;
 	}
 	
 	/* 'default' enter sequence for state Execute */
@@ -245,8 +245,8 @@ public class LockingClientStatemachine implements ILockingClientStatemachine {
 		react_main_region__entry_Default();
 	}
 	
-	/* Default exit sequence for state IDLE */
-	private void exitSequence_main_region_IDLE() {
+	/* Default exit sequence for state Idle */
+	private void exitSequence_main_region_Idle() {
 		nextStateIndex = 0;
 		stateVector[0] = State.$NullState$;
 	}
@@ -266,8 +266,8 @@ public class LockingClientStatemachine implements ILockingClientStatemachine {
 	/* Default exit sequence for region main region */
 	private void exitSequence_main_region() {
 		switch (stateVector[0]) {
-		case main_region_IDLE:
-			exitSequence_main_region_IDLE();
+		case main_region_Idle:
+			exitSequence_main_region_Idle();
 			break;
 		case main_region_Execute:
 			exitSequence_main_region_Execute();
@@ -280,10 +280,10 @@ public class LockingClientStatemachine implements ILockingClientStatemachine {
 		}
 	}
 	
-	/* The reactions of state IDLE. */
-	private void react_main_region_IDLE() {
-		if (check_main_region_IDLE_tr0_tr0()) {
-			effect_main_region_IDLE_tr0();
+	/* The reactions of state Idle. */
+	private void react_main_region_Idle() {
+		if (check_main_region_Idle_tr0_tr0()) {
+			effect_main_region_Idle_tr0();
 		}
 	}
 	
@@ -311,7 +311,7 @@ public class LockingClientStatemachine implements ILockingClientStatemachine {
 	
 	/* Default react sequence for initial entry  */
 	private void react_main_region__entry_Default() {
-		enterSequence_main_region_IDLE_default();
+		enterSequence_main_region_Idle_default();
 	}
 	
 	public void runCycle() {
@@ -321,8 +321,8 @@ public class LockingClientStatemachine implements ILockingClientStatemachine {
 		clearOutEvents();
 		for (nextStateIndex = 0; nextStateIndex < stateVector.length; nextStateIndex++) {
 			switch (stateVector[nextStateIndex]) {
-			case main_region_IDLE:
-				react_main_region_IDLE();
+			case main_region_Idle:
+				react_main_region_Idle();
 				break;
 			case main_region_Execute:
 				react_main_region_Execute();
