@@ -94,7 +94,7 @@ public class OnlineCollaborationSession {
 	private final Set<Leg> legs = new HashSet<>(); 
 	
 	protected final long AUTOSAVE_DELAY = 30 * 1000; // 5 min
-	public static boolean AUTO_SAVE = true;
+	public static boolean AUTO_SAVE = false;
 	protected boolean canSave = false;
 	
 	/**

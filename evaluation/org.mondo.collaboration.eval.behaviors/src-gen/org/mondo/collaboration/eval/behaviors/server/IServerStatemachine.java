@@ -8,13 +8,15 @@ public interface IServerStatemachine extends IStatemachine {
 	
 		public void raiseCommit();
 		
-		public void raiseMergeSuccess();
+		public void raiseSuccess();
+		
+		public void raiseLockFailure();
 		
 		public void raiseMergeFailure();
 		
-		public void raiseLockSuccess();
+		public void raiseRequest();
 		
-		public void raiseLockFailure();
+		public void raiseRelease();
 		
 		public void setSCInterfaceOperationCallback(SCInterfaceOperationCallback operationCallback);
 	
@@ -22,13 +24,17 @@ public interface IServerStatemachine extends IStatemachine {
 	
 	public interface SCInterfaceOperationCallback {
 	
+		public void lockRelease();
+		
+		public void lockRequest();
+		
 		public void conflict();
 		
 		public void violation();
 		
 		public void accepted();
 		
-		public void checkLockAndConflict();
+		public void checkCommit();
 		
 	}
 	

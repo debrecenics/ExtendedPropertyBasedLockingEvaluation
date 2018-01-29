@@ -4,3 +4,14 @@ Bundle-Name: Evaluation: Actor Behaviors
 Bundle-SymbolicName: org.mondo.collaboration.eval.behaviors
 Bundle-Version: 1.0.0.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Require-Bundle: org.eclipse.emf.ecore,
+ org.mondo.collaboration.security.lens,
+ org.mondo.collaboration.security.mpbl.xtext,
+ org.eclipse.core.resources,
+ org.mondo.collaboration.security.macl.xtext,
+ org.mondo.collaboration.security.macl.xtext.rule,
+ org.eclipse.incquery.patternlanguage.emf,
+ org.eclipse.emf.compare,
+ org.eclipse.viatra.dse.merge,
+ org.eclipse.viatra.dse.merge.emf.compare,
+ org.mondo.collaboration.eval.meta

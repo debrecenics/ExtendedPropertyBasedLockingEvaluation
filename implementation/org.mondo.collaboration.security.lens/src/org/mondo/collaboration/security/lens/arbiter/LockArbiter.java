@@ -299,6 +299,14 @@ public class LockArbiter {
 		
 	}
 	
+	public Map<Lock, IPatternMatch> getBindingForLock() {
+		return bindingForLock;
+	}
+	
+	public Map<Lock, IncQueryMatcher<? extends IPatternMatch>> getMatcherForLock() {
+		return matcherForLock;
+	}
+	
 	static enum UpdateDirection {
 		ADD,
 		REMOVE;

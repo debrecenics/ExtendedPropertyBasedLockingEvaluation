@@ -16,22 +16,10 @@ public class ServerStatemachine implements IServerStatemachine {
 			commit = true;
 		}
 		
-		private boolean mergeSuccess;
+		private boolean success;
 		
-		public void raiseMergeSuccess() {
-			mergeSuccess = true;
-		}
-		
-		private boolean mergeFailure;
-		
-		public void raiseMergeFailure() {
-			mergeFailure = true;
-		}
-		
-		private boolean lockSuccess;
-		
-		public void raiseLockSuccess() {
-			lockSuccess = true;
+		public void raiseSuccess() {
+			success = true;
 		}
 		
 		private boolean lockFailure;
@@ -40,12 +28,31 @@ public class ServerStatemachine implements IServerStatemachine {
 			lockFailure = true;
 		}
 		
+		private boolean mergeFailure;
+		
+		public void raiseMergeFailure() {
+			mergeFailure = true;
+		}
+		
+		private boolean request;
+		
+		public void raiseRequest() {
+			request = true;
+		}
+		
+		private boolean release;
+		
+		public void raiseRelease() {
+			release = true;
+		}
+		
 		protected void clearEvents() {
 			commit = false;
-			mergeSuccess = false;
-			mergeFailure = false;
-			lockSuccess = false;
+			success = false;
 			lockFailure = false;
+			mergeFailure = false;
+			request = false;
+			release = false;
 		}
 	}
 	
@@ -147,45 +154,67 @@ public class ServerStatemachine implements IServerStatemachine {
 		sCInterface.raiseCommit();
 	}
 	
-	public void raiseMergeSuccess() {
-		sCInterface.raiseMergeSuccess();
-	}
-	
-	public void raiseMergeFailure() {
-		sCInterface.raiseMergeFailure();
-	}
-	
-	public void raiseLockSuccess() {
-		sCInterface.raiseLockSuccess();
+	public void raiseSuccess() {
+		sCInterface.raiseSuccess();
 	}
 	
 	public void raiseLockFailure() {
 		sCInterface.raiseLockFailure();
 	}
 	
+	public void raiseMergeFailure() {
+		sCInterface.raiseMergeFailure();
+	}
+	
+	public void raiseRequest() {
+		sCInterface.raiseRequest();
+	}
+	
+	public void raiseRelease() {
+		sCInterface.raiseRelease();
+	}
+	
 	private boolean check_main_region_Idle_tr0_tr0() {
 		return sCInterface.commit;
 	}
 	
+	private boolean check_main_region_Idle_tr1_tr1() {
+		return sCInterface.request;
+	}
+	
+	private boolean check_main_region_Idle_tr2_tr2() {
+		return sCInterface.release;
+	}
+	
 	private boolean check_main_region_Accepting_tr0_tr0() {
-		return sCInterface.lockSuccess;
+		return sCInterface.success;
 	}
 	
 	private boolean check_main_region_Accepting_tr1_tr1() {
-		return sCInterface.mergeSuccess;
-	}
-	
-	private boolean check_main_region_Accepting_tr2_tr2() {
 		return sCInterface.lockFailure;
 	}
 	
-	private boolean check_main_region_Accepting_tr3_tr3() {
+	private boolean check_main_region_Accepting_tr2_tr2() {
 		return sCInterface.mergeFailure;
 	}
 	
 	private void effect_main_region_Idle_tr0() {
 		exitSequence_main_region_Idle();
 		enterSequence_main_region_Accepting_default();
+	}
+	
+	private void effect_main_region_Idle_tr1() {
+		exitSequence_main_region_Idle();
+		sCInterface.operationCallback.lockRequest();
+		
+		enterSequence_main_region_Idle_default();
+	}
+	
+	private void effect_main_region_Idle_tr2() {
+		exitSequence_main_region_Idle();
+		sCInterface.operationCallback.lockRelease();
+		
+		enterSequence_main_region_Idle_default();
 	}
 	
 	private void effect_main_region_Accepting_tr0() {
@@ -197,19 +226,12 @@ public class ServerStatemachine implements IServerStatemachine {
 	
 	private void effect_main_region_Accepting_tr1() {
 		exitSequence_main_region_Accepting();
-		sCInterface.operationCallback.accepted();
-		
-		enterSequence_main_region_Idle_default();
-	}
-	
-	private void effect_main_region_Accepting_tr2() {
-		exitSequence_main_region_Accepting();
 		sCInterface.operationCallback.violation();
 		
 		enterSequence_main_region_Idle_default();
 	}
 	
-	private void effect_main_region_Accepting_tr3() {
+	private void effect_main_region_Accepting_tr2() {
 		exitSequence_main_region_Accepting();
 		sCInterface.operationCallback.conflict();
 		
@@ -218,7 +240,7 @@ public class ServerStatemachine implements IServerStatemachine {
 	
 	/* Entry action for state 'Accepting'. */
 	private void entryAction_main_region_Accepting() {
-		sCInterface.operationCallback.checkLockAndConflict();
+		sCInterface.operationCallback.checkCommit();
 	}
 	
 	/* 'default' enter sequence for state Idle */
@@ -269,6 +291,14 @@ public class ServerStatemachine implements IServerStatemachine {
 	private void react_main_region_Idle() {
 		if (check_main_region_Idle_tr0_tr0()) {
 			effect_main_region_Idle_tr0();
+		} else {
+			if (check_main_region_Idle_tr1_tr1()) {
+				effect_main_region_Idle_tr1();
+			} else {
+				if (check_main_region_Idle_tr2_tr2()) {
+					effect_main_region_Idle_tr2();
+				}
+			}
 		}
 	}
 	
@@ -282,10 +312,6 @@ public class ServerStatemachine implements IServerStatemachine {
 			} else {
 				if (check_main_region_Accepting_tr2_tr2()) {
 					effect_main_region_Accepting_tr2();
-				} else {
-					if (check_main_region_Accepting_tr3_tr3()) {
-						effect_main_region_Accepting_tr3();
-					}
 				}
 			}
 		}

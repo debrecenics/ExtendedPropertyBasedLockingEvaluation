@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?><?eclipse version="3.0"?><!--
+--><plugin>
+  <extension point="org.eclipse.emf.ecore.generated_package">
+    <!-- @generated wt -->
+    <package class="wt.WtPackage" genModel="model/wt.genmodel" uri="http://wt/access-control"/>
+  </extension>
+  <extension id="wt.merge.iq.Helper" point="org.eclipse.incquery.runtime.queryspecification">
+    <group group="org.eclipse.incquery.runtime.extensibility.SingletonExtensionFactory:wt.merge.iq.Helper" id="wt.merge.iq.Helper"/>
+  </extension>
+</plugin>
