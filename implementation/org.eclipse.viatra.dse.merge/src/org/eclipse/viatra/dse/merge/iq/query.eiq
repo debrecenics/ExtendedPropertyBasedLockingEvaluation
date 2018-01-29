@@ -1,0 +1,16 @@
+package org.eclipse.viatra.dse.merge.iq
+
+import "http://org.eclipse.viatra.dse.merge/scope"
+import "http://org.eclipse.viatra.dse.merge/model"
+import "http://www.eclipse.org/emf/2002/Ecore"
+
+pattern idValue(id : Id, value) {
+	Id.eInt(id, value);
+	Id.type(id, ::EInt);
+} or {
+	Id.eLong(id, value);
+	Id.type(id, ::ELong);
+} or {
+	Id.eString(id, value);
+	Id.type(id, ::EString);
+}

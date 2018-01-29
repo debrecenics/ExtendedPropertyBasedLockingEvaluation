@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?><?eclipse version="3.0"?><!--
+--><plugin>
+  <extension-point id="configuration" name="DSE Merge Configuration" schema="schema/configuration.exsd"/>
+  <extension-point id="generated" name="DSE Merge Generated" schema="schema/generated.exsd"/>
+  <extension point="org.eclipse.emf.ecore.generated_package">
+    <!-- @generated merge -->
+    <package class="org.eclipse.viatra.dse.merge.model.ModelPackage" genModel="model/MergeScope.genmodel" uri="http://org.eclipse.viatra.dse.merge/model"/>
+  </extension>
+  <extension point="org.eclipse.emf.ecore.generated_package">
+    <!-- @generated scope -->
+    <package class="org.eclipse.viatra.dse.merge.scope.ScopePackage" genModel="model/MergeScope.genmodel" uri="http://org.eclipse.viatra.dse.merge/scope"/>
+  </extension>
+  <extension id="org.eclipse.viatra.dse.merge.iq.Query" point="org.eclipse.incquery.runtime.queryspecification">
+    <group group="org.eclipse.incquery.runtime.extensibility.SingletonExtensionFactory:org.eclipse.viatra.dse.merge.iq.Query" id="org.eclipse.viatra.dse.merge.iq.Query"/>
+  </extension>
+  <extension id="org.eclipse.viatra.dse.merge.iqconflicts.Conflicts" point="org.eclipse.incquery.runtime.queryspecification">
+    <group group="org.eclipse.incquery.runtime.extensibility.SingletonExtensionFactory:org.eclipse.viatra.dse.merge.iqconflicts.Conflicts" id="org.eclipse.viatra.dse.merge.iqconflicts.Conflicts"/>
+  </extension>
+</plugin>

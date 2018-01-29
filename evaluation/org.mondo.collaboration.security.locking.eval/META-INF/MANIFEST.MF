@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Client
+Bundle-SymbolicName: org.mondo.collaboration.eval.simulation
+Bundle-Version: 1.0.0.qualifier
+Require-Bundle: org.eclipse.emf.ecore,
+ org.eclipse.emf.compare;bundle-version="3.3.0",
+ com.google.guava,
+ org.mondo.collaboration.security.mpbl.xtext,
+ org.mondo.collaboration.security.lens,
+ org.eclipse.incquery.patternlanguage.emf,
+ org.mondo.collaboration.security.macl.xtext.rule,
+ org.mondo.collaboration.security.macl.xtext

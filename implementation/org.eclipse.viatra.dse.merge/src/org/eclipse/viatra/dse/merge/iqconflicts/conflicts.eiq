@@ -1,0 +1,110 @@
+package org.eclipse.viatra.dse.merge.iqconflicts
+
+import "http://org.eclipse.viatra.dse.merge/scope"
+import "http://org.eclipse.viatra.dse.merge/model"
+
+pattern conflicts(change1 : Change, change2 : Change) {
+	DSEMergeScope.completed(scope, change1);
+	DSEMergeScope.completed(scope, change2);
+	find conflictInternal(change1, change2);
+	change1!=change2;
+} or {
+	DSEMergeScope.completed(scope, change1);
+	DSEMergeScope.completed(scope, change2);
+	find conflictInternal(change2, change1);
+	change1!=change2;
+}
+
+pattern conflictHelper(change1 : Change, change2 : Change) {
+	DSEMergeScope.completed(_, change2);
+	neg find executed(change1);
+	find conflictInternal(change1, change2);
+} or {
+	DSEMergeScope.completed(_, change2);
+	neg find executed(change1);
+	find conflictInternal(change2, change1);
+}
+
+pattern executed(change:Change) {
+	DSEMergeScope.completed(_,change);
+}
+
+pattern conflictInternal(change1 : Change, change2 : Change) {
+	find sameAttributeSet(change1, change2);
+} or {
+	find sameReferenceSet(change1, change2);
+} or {
+	find createVSdelete(change1, change2);
+} or {
+	find modifyVSdelete(change1, change2);
+}
+
+pattern sameAttributeSet(change1 : Attribute, change2 : Attribute) {
+	Attribute.src(change1, id1);
+	Attribute.src(change2, id2);
+	find idEquals(id1, id2);
+	
+	Attribute.kind(change1, ::set);
+	Attribute.kind(change2, ::set);
+	
+	Attribute.feature(change1, feature);
+	Attribute.feature(change2, feature);
+	
+	Attribute.value(change1, value1);
+	Attribute.value(change2, value2);
+	
+	value1 != value2;
+}
+
+pattern sameReferenceSet(change1 : Reference, change2 : Reference) {
+	Reference.src(change1, id1);
+	Reference.src(change2, id2);
+	find idEquals(id1, id2);
+	
+	Reference.kind(change1, ::set);
+	Reference.kind(change2, ::set);
+	
+	Reference.feature(change1, feature);
+	Reference.feature(change2, feature);
+	
+	Reference.trg(change1, trg1);
+	Reference.trg(change2, trg2);
+	
+	neg find idEquals(trg1, trg2);
+}
+
+pattern createVSdelete(change1 : Create, change2 : Delete) {
+	Create.container(change1, id1);
+	Delete.src(change2, id2);
+	find idEquals(id1, id2);
+}
+
+pattern modifyVSdelete(change1 : Feature, change2 : Delete) {
+	Feature.src(change1, id1);
+	Delete.src(change2, id2);
+	find idEquals(id1, id2);
+} or {
+	Reference.trg(change1, id1);
+	Delete.src(change2, id2);
+	find idEquals(id1, id2);
+}
+
+pattern idEquals(id1 : Id, id2 : Id) {
+	Id.type(id1, type);
+	Id.type(id2, type);
+	find idEqualsInternal(id1, id2, type);
+}
+
+pattern idEqualsInternal(id1 : Id, id2 : Id, type : IdType) {
+	type == IdType::EInt;
+	Id.eInt(id1, value);
+	Id.eInt(id2, value);
+} or {
+	type == IdType::ELong;
+	Id.eLong(id1, value);
+	Id.eLong(id2, value);
+}  or {
+	type == IdType::EString;
+	Id.eString(id1, value);
+	Id.eString(id2, value);
+}
