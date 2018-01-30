@@ -1,9 +1,10 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Evaluation: Actor Behaviors
-Bundle-SymbolicName: org.mondo.collaboration.eval.behaviors
+Bundle-SymbolicName: org.mondo.collaboration.eval.behaviors;singleton:=true
 Bundle-Version: 1.0.0.qualifier
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Export-Package: org.mondo.collaboration.queries,
+ org.mondo.collaboration.queries.util
 Require-Bundle: org.eclipse.emf.ecore,
  org.mondo.collaboration.security.lens,
  org.mondo.collaboration.security.mpbl.xtext,
@@ -14,4 +15,6 @@ Require-Bundle: org.eclipse.emf.ecore,
  org.eclipse.emf.compare,
  org.eclipse.viatra.dse.merge,
  org.eclipse.viatra.dse.merge.emf.compare,
- org.mondo.collaboration.eval.meta
+ org.mondo.collaboration.eval.meta,
+ org.apache.log4j;bundle-version="1.2.15"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8

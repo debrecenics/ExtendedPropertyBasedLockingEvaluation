@@ -1,5 +1,6 @@
 package org.mondo.collaboration.eval.behaviors;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -95,30 +96,34 @@ public class ServerBehavior extends ServerStatemachine {
 		@Override
 		public void lockRelease() {
 			String user = channel.getUser();
-			IQuerySpecification<?> lock = channel.getReleasedLock();
-			lockMap.get(user).remove(lock);
-			MatchUpdateListener listener = listeners.get(lock);
-			try {
-				engine.removeMatchUpdateListener((IncQueryMatcher<?>) engine.getMatcher(lock), listener);
-				listeners.remove(lock, listener);
-			} catch (IncQueryException e) {
-				e.printStackTrace();
+			Collection<IQuerySpecification<?>> locks = channel.getReleasedLocks();
+			for (IQuerySpecification<?> lock : locks) {
+				lockMap.get(user).remove(lock);
+				MatchUpdateListener listener = listeners.get(lock);
+				try {
+					engine.removeMatchUpdateListener((IncQueryMatcher<?>) engine.getMatcher(lock), listener);
+					listeners.remove(lock, listener);
+				} catch (IncQueryException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 
 		@Override
 		public void lockRequest() {
 			String user = channel.getUser();
-			IQuerySpecification<?> lock = channel.getRequestedLock();
-			lockMap.put(user, lock);
-
-			try {
-				IncQueryMatcher<?> matcher = lock.getMatcher(engine);
-				MatchUpdateListener listener = new MatchUpdateListener(lock);
-				engine.addMatchUpdateListener(matcher, listener, false);
-				listeners.put(lock, listener);
-			} catch (IncQueryException e) {
-				e.printStackTrace();
+			Collection<IQuerySpecification<?>> locks = channel.getRequestedLocks();
+			for (IQuerySpecification<?> lock : locks) {
+				lockMap.put(user, lock);
+	
+				try {
+					IncQueryMatcher<?> matcher = lock.getMatcher(engine);
+					MatchUpdateListener listener = new MatchUpdateListener(lock);
+					engine.addMatchUpdateListener(matcher, listener, false);
+					listeners.put(lock, listener);
+				} catch (IncQueryException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 

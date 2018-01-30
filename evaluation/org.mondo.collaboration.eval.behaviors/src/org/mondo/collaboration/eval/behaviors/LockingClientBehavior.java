@@ -1,5 +1,7 @@
 package org.mondo.collaboration.eval.behaviors;
 
+import java.util.Collection;
+
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.incquery.runtime.api.IQuerySpecification;
 import org.mondo.collaboration.eval.behaviors.lockingclient.LockingClientStatemachine;
@@ -13,13 +15,13 @@ public class LockingClientBehavior extends LockingClientStatemachine {
 	EObject localModel;
 	EObject ancestorModel;
 	IModelManipulator manipulator;
-	IQuerySpecification<?> lock;
+	Collection<IQuerySpecification<?>> locks;
 	private LockingBasedChannel channel;
 
-	public LockingClientBehavior(String user, IModelManipulator manipulator, IQuerySpecification<?> lock, ServerBehavior server) {
+	public LockingClientBehavior(String user, IModelManipulator manipulator, Collection<IQuerySpecification<?>> locks, ServerBehavior server) {
 		this.user = user;
 		this.manipulator = manipulator;
-		this.lock = lock;
+		this.locks = locks;
 
 		getSCInterface().setSCInterfaceOperationCallback(new OperationCallback());
 		channel = Channel.createLockBasedChannel(server, this);
@@ -71,7 +73,7 @@ public class LockingClientBehavior extends LockingClientStatemachine {
 		}
 	}
 
-	public IQuerySpecification<?> getLock() {
-		return null;
+	public Collection<IQuerySpecification<?>> getLocks() {
+		return locks;
 	}
 }

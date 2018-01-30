@@ -1,5 +1,7 @@
 package org.mondo.collaboration.eval.behaviors.util;
 
+import java.util.Collection;
+
 import org.eclipse.emf.common.notify.Notifier;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.incquery.runtime.api.IQuerySpecification;
@@ -51,11 +53,11 @@ public class Channel {
 		throw new UnsupportedOperationException();
 	}
 
-	public IQuerySpecification<?> getRequestedLock() {
+	public Collection<IQuerySpecification<?>> getRequestedLocks() {
 		throw new UnsupportedOperationException();
 	}
 	
-	public IQuerySpecification<?> getReleasedLock() {
+	public Collection<IQuerySpecification<?>> getReleasedLocks() {
 		throw new UnsupportedOperationException();
 	}
 	
@@ -95,8 +97,8 @@ public class Channel {
 		}
 		
 		@Override
-		public IQuerySpecification<?> getRequestedLock() {
-			return client.getLock();
+		public Collection<IQuerySpecification<?>> getRequestedLocks() {
+			return client.getLocks();
 		}
 		
 		@Override
@@ -110,8 +112,8 @@ public class Channel {
 		}
 		
 		@Override
-		public IQuerySpecification<?> getReleasedLock() {
-			return client.getLock();
+		public Collection<IQuerySpecification<?>> getReleasedLocks() {
+			return client.getLocks();
 		}
 		
 		@Override

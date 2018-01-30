@@ -1,0 +1,226 @@
+package org.mondo.collaboration.queries
+	
+import "http://wt/access-control"
+import "http://www.eclipse.org/emf/2002/Ecore"
+
+pattern containedBy(parent,child) {	
+	Composite.submodules(parent,child);
+} or {
+	Module.provides(parent,child);	
+}
+pattern userM(ctrl: Control, sgn: Signal, f, c) {
+	Control.cycle(ctrl, c);
+	Control.provides(ctrl,sgn);
+	Signal.frequency(sgn,f);
+}
+pattern userT(ctrl: Control, sgn: Signal, c, t) {
+	Control.type(ctrl, t);
+	Control.cycle(ctrl, c);
+	Control.provides(ctrl,sgn);
+} or {
+	Control.type(ctrl, t);
+	Control.cycle(ctrl, c);
+	Control.consumes(ctrl,sgn);
+}
+pattern userR(vendor, object, composite : Composite) {
+	Composite.vendor(composite,vendor);
+	find containedBy+(composite,object);
+}
+
+pattern userRControlCycle(vendor, object, cycle, composite : Composite) {
+	Composite.vendor(composite,vendor);
+	find containedBy+(composite,object);
+	Control.cycle(object, cycle);
+}
+
+pattern userRControlType(vendor, object : Control, type, composite : Composite) {
+	Composite.vendor(composite,vendor);
+	find containedBy+(composite,object);
+	Control.type(object, type);
+}
+
+pattern userRControlProvide(vendor, object : Control, signal : Signal, composite : Composite) {
+	Composite.vendor(composite,vendor);
+	find containedBy+(composite,object);
+	Control.provides(object, signal);
+}
+
+pattern userRControlConsume(vendor, object, signal : Signal, composite : Composite) {
+	Composite.vendor(composite,vendor);
+	find containedBy+(composite,object);
+	Control.consumes(object, signal);
+}
+
+pattern userRSignalFrequency(vendor, object : Signal, frequency, composite : Composite) {
+	Composite.vendor(composite,vendor);
+	find containedBy+(composite,object);
+	Signal.frequency(object, frequency);
+}		
+pattern userM0(ctrl: Control, sgn: Signal, f) {
+	Control.cycle(ctrl, "0");
+	Control.provides(ctrl,sgn);
+	Signal.frequency(sgn,f);
+}
+pattern userT0(ctrl: Control, sgn: Signal, c, t) {
+	Control.type(ctrl, t);
+	Control.type(ctrl, "0");
+	Control.cycle(ctrl, c);
+	Control.provides(ctrl,sgn);
+} or {
+	Control.type(ctrl, t);
+	Control.type(ctrl, "0");
+	Control.cycle(ctrl, c);
+	Control.consumes(ctrl,sgn);
+}
+pattern userR0(vendor, object, composite : Composite) {
+	Composite.vendor(composite,vendor);
+	Composite.vendor(composite,"0");
+	find containedBy+(composite,object);
+}
+
+pattern userR0ControlCycle(vendor, object, cycle, composite : Composite) {
+	Composite.vendor(composite,vendor);
+	Composite.vendor(composite,"0");
+	find containedBy+(composite,object);
+	Control.cycle(object, cycle);
+}
+
+pattern userR0ControlType(vendor, object : Control, type, composite : Composite) {
+	Composite.vendor(composite,vendor);
+	Composite.vendor(composite,"0");
+	find containedBy+(composite,object);
+	Control.type(object, type);
+}
+
+pattern userR0ControlProvide(vendor, object : Control, signal : Signal, composite : Composite) {
+	Composite.vendor(composite,vendor);
+	Composite.vendor(composite,"0");
+	find containedBy+(composite,object);
+	Control.provides(object, signal);
+}
+
+pattern userR0ControlConsume(vendor, object, signal : Signal, composite : Composite) {
+	Composite.vendor(composite,vendor);
+	Composite.vendor(composite,"0");
+	find containedBy+(composite,object);
+	Control.consumes(object, signal);
+}
+
+pattern userR0SignalFrequency(vendor, object : Signal, frequency, composite : Composite) {
+	Composite.vendor(composite,vendor);
+	Composite.vendor(composite,"0");
+	find containedBy+(composite,object);
+	Signal.frequency(object, frequency);
+}		
+pattern userM1(ctrl: Control, sgn: Signal, f) {
+	Control.cycle(ctrl, "1");
+	Control.provides(ctrl,sgn);
+	Signal.frequency(sgn,f);
+}
+pattern userT1(ctrl: Control, sgn: Signal, c, t) {
+	Control.type(ctrl, t);
+	Control.type(ctrl, "1");
+	Control.cycle(ctrl, c);
+	Control.provides(ctrl,sgn);
+} or {
+	Control.type(ctrl, t);
+	Control.type(ctrl, "1");
+	Control.cycle(ctrl, c);
+	Control.consumes(ctrl,sgn);
+}
+pattern userR1(vendor, object, composite : Composite) {
+	Composite.vendor(composite,vendor);
+	Composite.vendor(composite,"1");
+	find containedBy+(composite,object);
+}
+
+pattern userR1ControlCycle(vendor, object, cycle, composite : Composite) {
+	Composite.vendor(composite,vendor);
+	Composite.vendor(composite,"1");
+	find containedBy+(composite,object);
+	Control.cycle(object, cycle);
+}
+
+pattern userR1ControlType(vendor, object : Control, type, composite : Composite) {
+	Composite.vendor(composite,vendor);
+	Composite.vendor(composite,"1");
+	find containedBy+(composite,object);
+	Control.type(object, type);
+}
+
+pattern userR1ControlProvide(vendor, object : Control, signal : Signal, composite : Composite) {
+	Composite.vendor(composite,vendor);
+	Composite.vendor(composite,"1");
+	find containedBy+(composite,object);
+	Control.provides(object, signal);
+}
+
+pattern userR1ControlConsume(vendor, object, signal : Signal, composite : Composite) {
+	Composite.vendor(composite,vendor);
+	Composite.vendor(composite,"1");
+	find containedBy+(composite,object);
+	Control.consumes(object, signal);
+}
+
+pattern userR1SignalFrequency(vendor, object : Signal, frequency, composite : Composite) {
+	Composite.vendor(composite,vendor);
+	Composite.vendor(composite,"1");
+	find containedBy+(composite,object);
+	Signal.frequency(object, frequency);
+}		
+pattern userM2(ctrl: Control, sgn: Signal, f) {
+	Control.cycle(ctrl, "2");
+	Control.provides(ctrl,sgn);
+	Signal.frequency(sgn,f);
+}
+pattern userT2(ctrl: Control, sgn: Signal, c, t) {
+	Control.type(ctrl, t);
+	Control.type(ctrl, "2");
+	Control.cycle(ctrl, c);
+	Control.provides(ctrl,sgn);
+} or {
+	Control.type(ctrl, t);
+	Control.type(ctrl, "2");
+	Control.cycle(ctrl, c);
+	Control.consumes(ctrl,sgn);
+}
+pattern userR2(vendor, object, composite : Composite) {
+	Composite.vendor(composite,vendor);
+	Composite.vendor(composite,"2");
+	find containedBy+(composite,object);
+}
+
+pattern userR2ControlCycle(vendor, object, cycle, composite : Composite) {
+	Composite.vendor(composite,vendor);
+	Composite.vendor(composite,"2");
+	find containedBy+(composite,object);
+	Control.cycle(object, cycle);
+}
+
+pattern userR2ControlType(vendor, object : Control, type, composite : Composite) {
+	Composite.vendor(composite,vendor);
+	Composite.vendor(composite,"2");
+	find containedBy+(composite,object);
+	Control.type(object, type);
+}
+
+pattern userR2ControlProvide(vendor, object : Control, signal : Signal, composite : Composite) {
+	Composite.vendor(composite,vendor);
+	Composite.vendor(composite,"2");
+	find containedBy+(composite,object);
+	Control.provides(object, signal);
+}
+
+pattern userR2ControlConsume(vendor, object, signal : Signal, composite : Composite) {
+	Composite.vendor(composite,vendor);
+	Composite.vendor(composite,"2");
+	find containedBy+(composite,object);
+	Control.consumes(object, signal);
+}
+
+pattern userR2SignalFrequency(vendor, object : Signal, frequency, composite : Composite) {
+	Composite.vendor(composite,vendor);
+	Composite.vendor(composite,"2");
+	find containedBy+(composite,object);
+	Signal.frequency(object, frequency);
+}		
