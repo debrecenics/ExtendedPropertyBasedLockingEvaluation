@@ -1,38 +1,42 @@
 package org.mondo.collaboration.eval.behaviors;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.incquery.runtime.api.IQuerySpecification;
 import org.mondo.collaboration.eval.behaviors.lockingclient.LockingClientStatemachine;
+import org.mondo.collaboration.eval.behaviors.users.BaseUser;
 import org.mondo.collaboration.eval.behaviors.util.Channel;
 import org.mondo.collaboration.eval.behaviors.util.Channel.LockingBasedChannel;
-import org.mondo.collaboration.eval.behaviors.util.IModelManipulator;
+
+import com.google.common.collect.Lists;
 
 public class LockingClientBehavior extends LockingClientStatemachine {
 
-	String user;
+	BaseUser user;
 	EObject localModel;
 	EObject ancestorModel;
-	IModelManipulator manipulator;
-	Collection<IQuerySpecification<?>> locks;
-	private LockingBasedChannel channel;
+	LockingBasedChannel channel;
+	
+	List<Double> waitTime = Lists.newArrayList();
 
-	public LockingClientBehavior(String user, IModelManipulator manipulator, Collection<IQuerySpecification<?>> locks, ServerBehavior server) {
+	public LockingClientBehavior(BaseUser user, ServerBehavior server) {
 		this.user = user;
-		this.manipulator = manipulator;
-		this.locks = locks;
-
+		
+		localModel = server.getLatestModel();
+		ancestorModel = server.getLatestModel();
+		
 		getSCInterface().setSCInterfaceOperationCallback(new OperationCallback());
 		channel = Channel.createLockBasedChannel(server, this);
 	}
 
-	public String getUser() {
-		return user;
+	public String getUsername() {
+		return user.getUsername();
 	}
 
 	public void execute(EObject model) {
-		localModel = manipulator.execute(model);
+		localModel = user.execute(model);
 	}
 
 	public EObject getAncestorModel() {
@@ -43,13 +47,26 @@ public class LockingClientBehavior extends LockingClientStatemachine {
 		return localModel;
 	}
 	
-	private final class OperationCallback implements SCInterfaceOperationCallback {
+	public double getWaitTime() {
+		return waitTime.stream().reduce(0d, Double::sum);
+	}
+	
+	public final class OperationCallback implements SCInterfaceOperationCallback {
 		
+		private double waitStart;
+
 		@Override
-		public void revert() {
+		public void violationStart() {
 			localModel = ancestorModel;
+			waitStart = channel.getServerTime();
 		}
 
+		@Override
+		public void violationEnd() {
+			double waitEnd = channel.getServerTime();	
+			waitTime.add(waitEnd - waitStart);
+		}
+		
 		@Override
 		public void release() {
 			channel.sendReleaseFromClient();
@@ -63,7 +80,7 @@ public class LockingClientBehavior extends LockingClientStatemachine {
 
 		@Override
 		public void execute() {
-			localModel = manipulator.execute(localModel);
+			localModel = user.execute(localModel);
 			
 		}
 
@@ -71,9 +88,19 @@ public class LockingClientBehavior extends LockingClientStatemachine {
 		public void commit() {
 			channel.sendCommitFromClient();			
 		}
+		
+		@Override
+		public void store() {
+			localModel = channel.getRemoteModel();
+			ancestorModel = channel.getRemoteModel();
+		}
 	}
 
 	public Collection<IQuerySpecification<?>> getLocks() {
-		return locks;
+		return user.getLocks();
+	}
+	
+	public BaseUser getUser() {
+		return user;
 	}
 }

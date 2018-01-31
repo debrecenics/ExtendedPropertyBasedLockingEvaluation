@@ -28,10 +28,17 @@ public class MergingClientStatemachine implements IMergingClientStatemachine {
 			conflict = true;
 		}
 		
+		private boolean violation;
+		
+		public void raiseViolation() {
+			violation = true;
+		}
+		
 		protected void clearEvents() {
 			upload = false;
 			success = false;
 			conflict = false;
+			violation = false;
 		}
 	}
 	
@@ -43,6 +50,7 @@ public class MergingClientStatemachine implements IMergingClientStatemachine {
 		main_region_Idle,
 		main_region_Commited,
 		main_region_Merging,
+		main_region_Violation,
 		$NullState$
 	};
 	
@@ -123,6 +131,8 @@ public class MergingClientStatemachine implements IMergingClientStatemachine {
 			return stateVector[0] == State.main_region_Commited;
 		case main_region_Merging:
 			return stateVector[0] == State.main_region_Merging;
+		case main_region_Violation:
+			return stateVector[0] == State.main_region_Violation;
 		default:
 			return false;
 		}
@@ -144,6 +154,10 @@ public class MergingClientStatemachine implements IMergingClientStatemachine {
 		sCInterface.raiseConflict();
 	}
 	
+	public void raiseViolation() {
+		sCInterface.raiseViolation();
+	}
+	
 	private boolean check_main_region_Idle_tr0_tr0() {
 		return sCInterface.upload;
 	}
@@ -156,7 +170,15 @@ public class MergingClientStatemachine implements IMergingClientStatemachine {
 		return sCInterface.conflict;
 	}
 	
+	private boolean check_main_region_Commited_tr2_tr2() {
+		return sCInterface.violation;
+	}
+	
 	private boolean check_main_region_Merging_tr0_tr0() {
+		return sCInterface.upload;
+	}
+	
+	private boolean check_main_region_Violation_tr0_tr0() {
 		return sCInterface.upload;
 	}
 	
@@ -177,6 +199,11 @@ public class MergingClientStatemachine implements IMergingClientStatemachine {
 		enterSequence_main_region_Merging_default();
 	}
 	
+	private void effect_main_region_Commited_tr2() {
+		exitSequence_main_region_Commited();
+		enterSequence_main_region_Violation_default();
+	}
+	
 	private void effect_main_region_Merging_tr0() {
 		exitSequence_main_region_Merging();
 		sCInterface.operationCallback.commit();
@@ -184,9 +211,26 @@ public class MergingClientStatemachine implements IMergingClientStatemachine {
 		enterSequence_main_region_Commited_default();
 	}
 	
+	private void effect_main_region_Violation_tr0() {
+		exitSequence_main_region_Violation();
+		sCInterface.operationCallback.commit();
+		
+		enterSequence_main_region_Commited_default();
+	}
+	
+	/* Entry action for state 'Idle'. */
+	private void entryAction_main_region_Idle() {
+		sCInterface.operationCallback.store();
+	}
+	
 	/* Entry action for state 'Merging'. */
 	private void entryAction_main_region_Merging() {
 		sCInterface.operationCallback.resolve();
+	}
+	
+	/* Entry action for state 'Violation'. */
+	private void entryAction_main_region_Violation() {
+		sCInterface.operationCallback.violationStart();
 	}
 	
 	/* Exit action for state 'Idle'. */
@@ -194,8 +238,14 @@ public class MergingClientStatemachine implements IMergingClientStatemachine {
 		sCInterface.operationCallback.execute();
 	}
 	
+	/* Exit action for state 'Violation'. */
+	private void exitAction_main_region_Violation() {
+		sCInterface.operationCallback.violationEnd();
+	}
+	
 	/* 'default' enter sequence for state Idle */
 	private void enterSequence_main_region_Idle_default() {
+		entryAction_main_region_Idle();
 		nextStateIndex = 0;
 		stateVector[0] = State.main_region_Idle;
 	}
@@ -211,6 +261,13 @@ public class MergingClientStatemachine implements IMergingClientStatemachine {
 		entryAction_main_region_Merging();
 		nextStateIndex = 0;
 		stateVector[0] = State.main_region_Merging;
+	}
+	
+	/* 'default' enter sequence for state Violation */
+	private void enterSequence_main_region_Violation_default() {
+		entryAction_main_region_Violation();
+		nextStateIndex = 0;
+		stateVector[0] = State.main_region_Violation;
 	}
 	
 	/* 'default' enter sequence for region main region */
@@ -238,6 +295,14 @@ public class MergingClientStatemachine implements IMergingClientStatemachine {
 		stateVector[0] = State.$NullState$;
 	}
 	
+	/* Default exit sequence for state Violation */
+	private void exitSequence_main_region_Violation() {
+		nextStateIndex = 0;
+		stateVector[0] = State.$NullState$;
+		
+		exitAction_main_region_Violation();
+	}
+	
 	/* Default exit sequence for region main region */
 	private void exitSequence_main_region() {
 		switch (stateVector[0]) {
@@ -249,6 +314,9 @@ public class MergingClientStatemachine implements IMergingClientStatemachine {
 			break;
 		case main_region_Merging:
 			exitSequence_main_region_Merging();
+			break;
+		case main_region_Violation:
+			exitSequence_main_region_Violation();
 			break;
 		default:
 			break;
@@ -269,6 +337,10 @@ public class MergingClientStatemachine implements IMergingClientStatemachine {
 		} else {
 			if (check_main_region_Commited_tr1_tr1()) {
 				effect_main_region_Commited_tr1();
+			} else {
+				if (check_main_region_Commited_tr2_tr2()) {
+					effect_main_region_Commited_tr2();
+				}
 			}
 		}
 	}
@@ -277,6 +349,13 @@ public class MergingClientStatemachine implements IMergingClientStatemachine {
 	private void react_main_region_Merging() {
 		if (check_main_region_Merging_tr0_tr0()) {
 			effect_main_region_Merging_tr0();
+		}
+	}
+	
+	/* The reactions of state Violation. */
+	private void react_main_region_Violation() {
+		if (check_main_region_Violation_tr0_tr0()) {
+			effect_main_region_Violation_tr0();
 		}
 	}
 	
@@ -300,6 +379,9 @@ public class MergingClientStatemachine implements IMergingClientStatemachine {
 				break;
 			case main_region_Merging:
 				react_main_region_Merging();
+				break;
+			case main_region_Violation:
+				react_main_region_Violation();
 				break;
 			default:
 				// $NullState$

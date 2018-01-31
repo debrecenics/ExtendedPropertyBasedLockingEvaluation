@@ -10,4 +10,7 @@ Require-Bundle: org.eclipse.emf.ecore,
  org.mondo.collaboration.security.lens,
  org.eclipse.incquery.patternlanguage.emf,
  org.mondo.collaboration.security.macl.xtext.rule,
- org.mondo.collaboration.security.macl.xtext
+ org.mondo.collaboration.security.macl.xtext,
+ org.mondo.collaboration.eval.behaviors,
+ org.mondo.collaboration.eval.meta
+Export-Package: org.mondo.collaboration.security.locking.eval.simulation

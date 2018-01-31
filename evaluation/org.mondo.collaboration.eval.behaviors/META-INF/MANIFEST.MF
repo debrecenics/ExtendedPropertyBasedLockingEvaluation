@@ -3,7 +3,11 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Evaluation: Actor Behaviors
 Bundle-SymbolicName: org.mondo.collaboration.eval.behaviors;singleton:=true
 Bundle-Version: 1.0.0.qualifier
-Export-Package: org.mondo.collaboration.queries,
+Export-Package: org.mondo.collaboration.eval.behaviors,
+ org.mondo.collaboration.eval.behaviors.lockingclient,
+ org.mondo.collaboration.eval.behaviors.mergingclient,
+ org.mondo.collaboration.eval.behaviors.users,
+ org.mondo.collaboration.queries,
  org.mondo.collaboration.queries.util
 Require-Bundle: org.eclipse.emf.ecore,
  org.mondo.collaboration.security.lens,

@@ -210,6 +210,11 @@ public class LockingClientStatemachine implements ILockingClientStatemachine {
 		enterSequence_main_region_Execute_default();
 	}
 	
+	/* Entry action for state 'Idle'. */
+	private void entryAction_main_region_Idle() {
+		sCInterface.operationCallback.store();
+	}
+	
 	/* Entry action for state 'Execute'. */
 	private void entryAction_main_region_Execute() {
 		sCInterface.operationCallback.execute();
@@ -217,11 +222,17 @@ public class LockingClientStatemachine implements ILockingClientStatemachine {
 	
 	/* Entry action for state 'Violation'. */
 	private void entryAction_main_region_Violation() {
-		sCInterface.operationCallback.revert();
+		sCInterface.operationCallback.violationStart();
+	}
+	
+	/* Exit action for state 'Violation'. */
+	private void exitAction_main_region_Violation() {
+		sCInterface.operationCallback.violationEnd();
 	}
 	
 	/* 'default' enter sequence for state Idle */
 	private void enterSequence_main_region_Idle_default() {
+		entryAction_main_region_Idle();
 		nextStateIndex = 0;
 		stateVector[0] = State.main_region_Idle;
 	}
@@ -261,6 +272,8 @@ public class LockingClientStatemachine implements ILockingClientStatemachine {
 	private void exitSequence_main_region_Violation() {
 		nextStateIndex = 0;
 		stateVector[0] = State.$NullState$;
+		
+		exitAction_main_region_Violation();
 	}
 	
 	/* Default exit sequence for region main region */

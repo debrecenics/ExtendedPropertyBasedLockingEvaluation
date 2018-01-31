@@ -24,12 +24,12 @@ public class UserReplacement extends BaseUser {
 
 	private static final Collection<String> lockClasses = 
 			Lists.newArrayList(
-					"org.mondo.collaboration.queries.UserR[id]",
-					"org.mondo.collaboration.queries.UserR[id]ControlCycle",
-					"org.mondo.collaboration.queries.UserR[id]ControlType",
-					"org.mondo.collaboration.queries.UserR[id]ControlProvide",
-					"org.mondo.collaboration.queries.UserR[id]ControlConsume",
-					"org.mondo.collaboration.queries.UserR[id]SignalFrequency"
+					"org.mondo.collaboration.queries.util.UserR[id]QuerySpecification",
+					"org.mondo.collaboration.queries.util.UserR[id]ControlCycleQuerySpecification",
+					"org.mondo.collaboration.queries.util.UserR[id]ControlTypeQuerySpecification",
+					"org.mondo.collaboration.queries.util.UserR[id]ControlProvideQuerySpecification",
+					"org.mondo.collaboration.queries.util.UserR[id]ControlConsumeQuerySpecification",
+					"org.mondo.collaboration.queries.util.UserR[id]SignalFrequencyQuerySpecification"
 					);
 	
 	protected List<Composite> list = Lists.newArrayList();
@@ -92,6 +92,11 @@ public class UserReplacement extends BaseUser {
 	@Override
 	protected Collection<String> getLockClasses() {
 		return lockClasses;
+	}
+
+	@Override
+	public UserType getUsertype() {
+		return UserType.R;
 	}
 
 }

@@ -26,9 +26,13 @@ public interface ILockingClientStatemachine extends IStatemachine {
 		
 		public void release();
 		
-		public void revert();
-		
 		public void commit();
+		
+		public void store();
+		
+		public void violationStart();
+		
+		public void violationEnd();
 		
 	}
 	

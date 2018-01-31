@@ -2,7 +2,6 @@ package org.mondo.collaboration.eval.behaviors.util;
 
 import java.util.Collection;
 
-import org.eclipse.emf.common.notify.Notifier;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.incquery.runtime.api.IQuerySpecification;
 import org.mondo.collaboration.eval.behaviors.LockingClientBehavior;
@@ -37,7 +36,7 @@ public class Channel {
 		throw new UnsupportedOperationException();
 	}
 	
-	public Notifier getRemoteModel() {
+	public EObject getRemoteModel() {
 		return server.getLatestModel();
 	}
 	
@@ -83,7 +82,7 @@ public class Channel {
 
 		@Override
 		public String getUser() {
-			return client.getUser();
+			return client.getUsername();
 		}
 
 		@Override
@@ -130,6 +129,10 @@ public class Channel {
 		public EObject getLocalModel() {
 			return client.getLocalModel();
 		}
+
+		public double getServerTime() {
+			return server.getCurrentTime();
+		}
 	}
 
 	public static class MergeBasedChannel extends Channel {
@@ -142,7 +145,7 @@ public class Channel {
 
 		@Override
 		public String getUser() {
-			return client.getUser();
+			return client.getUsername();
 		}
 
 		@Override
@@ -154,6 +157,12 @@ public class Channel {
 		public void sendAcceptedFromServer() {
 			client.raiseSuccess();
 		}
+		
+		@Override
+		public void sendViolationFromServer() {
+			client.raiseViolation();
+		}
+
 		
 		@Override
 		public void executeModelManipulation(EObject model) {
@@ -168,6 +177,10 @@ public class Channel {
 		@Override
 		public EObject getLocalModel() {
 			return client.getLocalModel();
-		}		
+		}
+
+		public double getServerTime() {
+			return server.getCurrentTime();
+		}
 	}
 }

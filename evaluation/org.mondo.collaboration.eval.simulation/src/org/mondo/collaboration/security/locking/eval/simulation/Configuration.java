@@ -1,19 +1,19 @@
 package org.mondo.collaboration.security.locking.eval.simulation;
 
-import java.util.List;
-import java.util.Map;
-
+import org.mondo.collaboration.eval.behaviors.users.BaseUser.UserType;
 import org.mondo.collaboration.security.locking.eval.simulation.Distribution.Exponential;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
 
 public class Configuration {
 
+	enum TimeType {
+		WAIT, EXEC, RETRY
+	}
+
 	public static final String EXEC = "exec";
 	public static final String WAIT = "wait";
-
-	public static Map<String, List<Double>> Timings;
 
 	public static int Days = 7;
 
@@ -25,32 +25,26 @@ public class Configuration {
 	public static int ExecMeanT = 2; // h
 	public static int ExecMeanM = 1; // h
 
-	public static void initiateTimings(int size) {
-		Timings = Maps.newHashMap();
-		populateTimingsTable(Timings, WaitMeanR, ExecMeanR, size, "R");
-		populateTimingsTable(Timings, WaitMeanT, ExecMeanT, size, "T");
-		populateTimingsTable(Timings, WaitMeanM, ExecMeanM, size, "M");
+	public static int RetryMeanR = 3; // h
+	public static int RetryMeanT = 2; // h
+	public static int RetryMeanM = 1; // h
+
+	public static Table<UserType, TimeType, Distribution> distributionTable = HashBasedTable.create();
+
+	static {
+		distributionTable.put(UserType.T, TimeType.EXEC, new Exponential(ExecMeanT));
+		distributionTable.put(UserType.M, TimeType.EXEC, new Exponential(ExecMeanM));
+		distributionTable.put(UserType.R, TimeType.EXEC, new Exponential(ExecMeanR));
+		distributionTable.put(UserType.T, TimeType.RETRY, new Exponential(RetryMeanT));
+		distributionTable.put(UserType.M, TimeType.RETRY, new Exponential(RetryMeanM));
+		distributionTable.put(UserType.R, TimeType.RETRY, new Exponential(RetryMeanR));
+		distributionTable.put(UserType.T, TimeType.WAIT, new Exponential(WaitMeanT));
+		distributionTable.put(UserType.M, TimeType.WAIT, new Exponential(WaitMeanM));
+		distributionTable.put(UserType.R, TimeType.WAIT, new Exponential(WaitMeanR));
 	}
 
-	private static void populateTimingsTable(Map<String, List<Double>> table, int waitMean, int execMean, int size,
-			String name) {
-		Exponential distributionWait = new Exponential(waitMean);
-		Exponential distributionExec = new Exponential(execMean);
-		for (int i = 1; i <= size; i++) {
-			String username = "user" + name + i;
-			populateTimingsList(table, username, (24 / (waitMean + execMean)) * Days, distributionWait,
-					distributionExec);
-		}
-	}
-
-	private static void populateTimingsList(Map<String, List<Double>> table, String username, int operations,
-			Distribution distributionWait, Distribution distributionExec) {
-		List<Double> list = Lists.newArrayList();
-		for (int i = 0; i < operations; i++) {
-			list.add(distributionWait.getNext());
-			list.add(distributionExec.getNext());
-		}
-		table.put(username, list);
+	public static double nextTime(UserType user, TimeType time) {
+		return distributionTable.get(user, time).getNext();
 	}
 
 }

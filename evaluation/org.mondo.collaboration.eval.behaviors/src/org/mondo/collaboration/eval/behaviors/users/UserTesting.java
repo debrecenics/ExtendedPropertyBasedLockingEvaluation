@@ -26,7 +26,7 @@ public class UserTesting extends BaseUser {
 	protected Map<Control,Signal> consumeSignals = Maps.newHashMap();
 	
 	private static final Collection<String> lockClasses = 
-			Lists.newArrayList("org.mondo.collaboration.queries.UserT[id]");
+			Lists.newArrayList("org.mondo.collaboration.queries.util.UserT[id]QuerySpecification");
 	
 	
 	public UserTesting(String id) {
@@ -74,6 +74,11 @@ public class UserTesting extends BaseUser {
 	@Override
 	protected Collection<String> getLockClasses() {
 		return lockClasses;
+	}
+
+	@Override
+	public UserType getUsertype() {
+		return UserType.T;
 	}
 
 }

@@ -15,7 +15,7 @@ import com.google.common.collect.Lists;
 public class UserMaintenance extends BaseUser {
 
 	private static final Collection<String> lockClasses = 
-			Lists.newArrayList("org.mondo.collaboration.queries.UserM[id]");
+			Lists.newArrayList("org.mondo.collaboration.queries.util.UserM[id]QuerySpecification");
 	
 	public UserMaintenance(String id) {
 		super(id);
@@ -48,6 +48,11 @@ public class UserMaintenance extends BaseUser {
 	@Override
 	protected Collection<String> getLockClasses() {
 		return lockClasses;
+	}
+
+	@Override
+	public UserType getUsertype() {
+		return UserType.M;
 	}
 
 }

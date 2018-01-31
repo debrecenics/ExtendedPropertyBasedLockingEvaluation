@@ -33,6 +33,8 @@ public class ServerBehavior extends ServerStatemachine {
 	protected List<IQuerySpecification<?>> lockViolations = Lists.newArrayList();
 	protected Map<IQuerySpecification<?>, MatchUpdateListener> listeners = Maps.newHashMap();
 
+	private double currentTime = 0d;
+	
 	protected Channel channel;
 	private AdvancedIncQueryEngine engine;
 
@@ -49,6 +51,10 @@ public class ServerBehavior extends ServerStatemachine {
 
 	public EObject getLatestModel() {
 		return latestModel;
+	}
+	
+	public double getCurrentTime() {
+		return currentTime;
 	}
 	
 	protected class OperationCallback implements SCInterfaceOperationCallback {
@@ -146,6 +152,10 @@ public class ServerBehavior extends ServerStatemachine {
 			}
 		}
 
+	}
+
+	public void setCurrentTime(double time) {
+		this.currentTime = time;
 	}
 
 }
