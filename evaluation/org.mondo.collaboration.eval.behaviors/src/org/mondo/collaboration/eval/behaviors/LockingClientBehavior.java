@@ -9,6 +9,8 @@ import org.mondo.collaboration.eval.behaviors.lockingclient.LockingClientStatema
 import org.mondo.collaboration.eval.behaviors.users.BaseUser;
 import org.mondo.collaboration.eval.behaviors.util.Channel;
 import org.mondo.collaboration.eval.behaviors.util.Channel.LockingBasedChannel;
+import org.mondo.collaboration.eval.behaviors.util.IRaiseFunction;
+import org.mondo.collaboration.eval.behaviors.util.Revision;
 
 import com.google.common.collect.Lists;
 
@@ -16,21 +18,31 @@ public class LockingClientBehavior extends LockingClientStatemachine {
 
 	BaseUser user;
 	EObject localModel;
-	EObject ancestorModel;
+	Revision ancestorRevision;
 	LockingBasedChannel channel;
+	
+	IRaiseFunction nextCall = null;
 	
 	List<Double> waitTime = Lists.newArrayList();
 
 	public LockingClientBehavior(BaseUser user, ServerBehavior server) {
 		this.user = user;
-		
-		localModel = server.getLatestModel();
-		ancestorModel = server.getLatestModel();
+
+		ancestorRevision = server.getLatestRevision();
+		localModel = ancestorRevision.getModel();
 		
 		getSCInterface().setSCInterfaceOperationCallback(new OperationCallback());
 		channel = Channel.createLockBasedChannel(server, this);
 	}
 
+	public void setNextCall(IRaiseFunction nextCall) {
+		this.nextCall = nextCall;
+	}
+	
+	public IRaiseFunction getNextCall() {
+		return nextCall;
+	}
+	
 	public String getUsername() {
 		return user.getUsername();
 	}
@@ -39,8 +51,8 @@ public class LockingClientBehavior extends LockingClientStatemachine {
 		localModel = user.execute(model);
 	}
 
-	public EObject getAncestorModel() {
-		return ancestorModel;
+	public Revision getAncestorRevision() {
+		return ancestorRevision;
 	}
 
 	public EObject getLocalModel() {
@@ -57,7 +69,7 @@ public class LockingClientBehavior extends LockingClientStatemachine {
 
 		@Override
 		public void violationStart() {
-			localModel = ancestorModel;
+			localModel = ancestorRevision.getModel();
 			waitStart = channel.getServerTime();
 		}
 
@@ -91,8 +103,8 @@ public class LockingClientBehavior extends LockingClientStatemachine {
 		
 		@Override
 		public void store() {
-			localModel = channel.getRemoteModel();
-			ancestorModel = channel.getRemoteModel();
+			ancestorRevision = channel.getRemoteRevision();
+			localModel = ancestorRevision.getModel();
 		}
 	}
 
@@ -102,5 +114,9 @@ public class LockingClientBehavior extends LockingClientStatemachine {
 	
 	public BaseUser getUser() {
 		return user;
+	}
+	
+	public double getServerTime() {
+		return channel.getServerTime();
 	}
 }

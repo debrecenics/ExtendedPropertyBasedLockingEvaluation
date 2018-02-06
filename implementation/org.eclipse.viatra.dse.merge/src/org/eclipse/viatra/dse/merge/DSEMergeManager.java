@@ -232,7 +232,7 @@ public class DSEMergeManager {
         } catch (IncQueryException e) {
             logger.error(e.getMessage(), e);
         }
-        dse.setMaxNumberOfThreads(4);
+        dse.setMaxNumberOfThreads(1);
     }
 
     /**

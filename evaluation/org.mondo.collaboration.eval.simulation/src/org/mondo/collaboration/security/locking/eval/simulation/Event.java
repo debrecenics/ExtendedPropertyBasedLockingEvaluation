@@ -6,6 +6,8 @@ import org.mondo.collaboration.eval.behaviors.IStatemachine;
 import org.mondo.collaboration.eval.behaviors.LockingClientBehavior;
 import org.mondo.collaboration.eval.behaviors.MergingClientBehavior;
 import org.mondo.collaboration.eval.behaviors.mergingclient.MergingClientStatemachine;
+import org.mondo.collaboration.eval.behaviors.users.BaseUser;
+import org.mondo.collaboration.eval.behaviors.util.IRaiseFunction;
 import org.mondo.collaboration.eval.behaviors.lockingclient.LockingClientStatemachine;
 import org.mondo.collaboration.security.locking.eval.simulation.Configuration.TimeType;
 
@@ -26,8 +28,30 @@ public abstract class Event {
 	public void execute() {
 		doExecute();
 		client.runCycle();
+		raiseRestStatemachineEvent();
 	}
 
+	private void raiseRestStatemachineEvent() {
+		while(nextCall() != null) {
+			nextCall().apply();
+			clearNextCall();
+			client.runCycle();
+		}
+	}
+
+	private IRaiseFunction nextCall() {
+		if(client instanceof MergingClientBehavior)
+			return ((MergingClientBehavior) client).getNextCall();
+		return ((LockingClientBehavior) client).getNextCall();
+	}
+	
+	private void clearNextCall() {
+		if(client instanceof MergingClientBehavior)
+			((MergingClientBehavior) client).setNextCall(null);
+		else
+			((LockingClientBehavior) client).setNextCall(null);
+	}
+	
 	public abstract void doExecute();
 	
 	public Collection<Event> nextEvents() {
@@ -48,7 +72,8 @@ public abstract class Event {
 			builder.add(new UploadEvent(time + Configuration.nextTime(client.getUser().getUsertype(), TimeType.RETRY), client));
 		}
 		if(client.isStateActive(MergingClientStatemachine.State.main_region_Idle)) {
-			builder.add(new UploadEvent(time + Configuration.nextTime(client.getUser().getUsertype(), TimeType.WAIT), client));
+			if(client.getServerTime() < Configuration.TimeLimit)
+				builder.add(new UploadEvent(time + Configuration.nextTime(client.getUser().getUsertype(), TimeType.WAIT), client));
 		}
 		return builder.build();
 	}
@@ -63,7 +88,8 @@ public abstract class Event {
 			builder.add(new FinishEvent(time + Configuration.nextTime(client.getUser().getUsertype(), TimeType.EXEC), client));
 		}
 		if(client.isStateActive(LockingClientStatemachine.State.main_region_Idle)) {
-			builder.add(new RequestEvent(time + Configuration.nextTime(client.getUser().getUsertype(), TimeType.WAIT), client));
+			if(client.getServerTime() < Configuration.TimeLimit)
+				builder.add(new RequestEvent(time + Configuration.nextTime(client.getUser().getUsertype(), TimeType.WAIT), client));
 		}
 		return builder.build();
 	}
@@ -72,6 +98,21 @@ public abstract class Event {
 		return time;
 	}
 
+	private String getPrettyUser() {
+		BaseUser user = null;
+		if(client instanceof MergingClientBehavior) {
+			user = ((MergingClientBehavior) client).getUser();
+		} else {
+			user = ((LockingClientBehavior) client).getUser();
+		}
+		return user.getUsertype() + user.getUsername();	
+	}
+	
+	@Override
+	public String toString() {
+		return getClass().getCanonicalName() + " at time " + getTime() + " for user " + getPrettyUser();
+	}
+	
 	public static class UploadEvent extends Event {
 
 		private MergingClientBehavior client;
@@ -117,7 +158,6 @@ public abstract class Event {
 		public void doExecute() {
 			client.raiseFinish();
 		}
-
 	}
 
 }

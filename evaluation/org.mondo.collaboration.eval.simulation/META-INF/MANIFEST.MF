@@ -12,5 +12,10 @@ Require-Bundle: org.eclipse.emf.ecore,
  org.mondo.collaboration.security.macl.xtext.rule,
  org.mondo.collaboration.security.macl.xtext,
  org.mondo.collaboration.eval.behaviors,
- org.mondo.collaboration.eval.meta
+ org.mondo.collaboration.eval.meta,
+ org.apache.log4j,
+ org.eclipse.viatra.dse.merge,
+ org.eclipse.viatra.dse.api;bundle-version="0.8.0",
+ org.eclipse.viatra.dse.base;bundle-version="0.8.0",
+ org.eclipse.viatra.dse.monitor;bundle-version="0.8.0"
 Export-Package: org.mondo.collaboration.security.locking.eval.simulation

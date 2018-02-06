@@ -2,6 +2,7 @@ package org.mondo.collaboration.eval.behaviors;
 
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.eclipse.emf.compare.Comparison;
 import org.eclipse.emf.compare.EMFCompare;
 import org.eclipse.emf.compare.scope.DefaultComparisonScope;
@@ -15,6 +16,8 @@ import org.mondo.collaboration.eval.behaviors.mergingclient.MergingClientStatema
 import org.mondo.collaboration.eval.behaviors.users.BaseUser;
 import org.mondo.collaboration.eval.behaviors.util.Channel;
 import org.mondo.collaboration.eval.behaviors.util.Channel.MergeBasedChannel;
+import org.mondo.collaboration.eval.behaviors.util.IRaiseFunction;
+import org.mondo.collaboration.eval.behaviors.util.Revision;
 
 import com.google.common.collect.Lists;
 
@@ -24,18 +27,33 @@ public class MergingClientBehavior extends MergingClientStatemachine {
 
 	BaseUser user;
 	EObject localModel;
-	EObject ancestorModel;
+	Revision ancestorRevision;
 	private MergeBasedChannel channel;
 	List<Long> mergeTime = Lists.newArrayList();
 	List<Double> retryTime = Lists.newArrayList();
 	
+	IRaiseFunction nextCall = null;
+	
+	Logger LOGGER = Logger.getLogger(MergingClientBehavior.class);
+	
 	public MergingClientBehavior(BaseUser user, ServerBehavior server) {
 		this.user = user;
+		
+		ancestorRevision = server.getLatestRevision();
+		localModel = ancestorRevision.getModel();
 		
 		getSCInterface().setSCInterfaceOperationCallback(new OperationCallback());
 		channel = Channel.createMergeBasedChannel(server, this);
 	}
 
+	public void setNextCall(IRaiseFunction nextCall) {
+		this.nextCall = nextCall;
+	}
+	
+	public IRaiseFunction getNextCall() {
+		return nextCall;
+	}
+	
 	public String getUsername() {
 		return user.getUsername();
 	}
@@ -44,8 +62,8 @@ public class MergingClientBehavior extends MergingClientStatemachine {
 		localModel = user.execute(model);
 	}
 
-	public EObject getAncestorModel() {
-		return ancestorModel;
+	public Revision getAncestorRevision() {
+		return ancestorRevision;
 	}
 
 	public EObject getLocalModel() {
@@ -65,26 +83,28 @@ public class MergingClientBehavior extends MergingClientStatemachine {
 	}
 	
 	private final class OperationCallback implements SCInterfaceOperationCallback {
+		private final MergeConfigurator MERGE_CONFIGURATOR = new MergeConfigurator();
 		private double waitStart;
 
 		@Override
 		public void resolve() {
+			LOGGER.info(user.getUsername() + " is resolving the merge");
 			long start = System.nanoTime();
 			IComparisonScope scopeLO = new DefaultComparisonScope(
 					channel.getLocalModel(), 
-					channel.getAncestorModel(), null);			
+					channel.getAncestorRevision().getModel(), null);			
 			
 			Comparison comparisonLO = EMFCompare.builder().build().compare(scopeLO);
-			ChangeSet changeSetLO = new EMFCompareTranslator().translate(comparisonLO, new MergeConfigurator().getIdMapper());
+			ChangeSet changeSetLO = new EMFCompareTranslator().translate(comparisonLO, MERGE_CONFIGURATOR.getIdMapper());
 			
 			IComparisonScope scopeRO = new DefaultComparisonScope(
-					channel.getLocalModel(), 
-					channel.getAncestorModel(), null);			
+					channel.getRemoteRevision().getModel(), 
+					channel.getAncestorRevision().getModel(), null);			
 			
 			Comparison comparisonRO = EMFCompare.builder().build().compare(scopeRO);
-			ChangeSet changeSetRO = new EMFCompareTranslator().translate(comparisonRO, new MergeConfigurator().getIdMapper());
+			ChangeSet changeSetRO = new EMFCompareTranslator().translate(comparisonRO, MERGE_CONFIGURATOR.getIdMapper());
 			
-			DSEMergeManager manager = DSEMergeManager.create(ancestorModel, changeSetLO, changeSetRO);
+			DSEMergeManager manager = DSEMergeManager.create(channel.getAncestorRevision().getModel(), changeSetLO, changeSetRO, MERGE_CONFIGURATOR);
 			Solution solution = manager.start().iterator().next();
 			localModel = solution.getScope().getOrigin();
 			long end = System.nanoTime();
@@ -94,17 +114,19 @@ public class MergingClientBehavior extends MergingClientStatemachine {
 		@Override
 		public void execute() {
 			localModel = user.execute(localModel);
+			LOGGER.info(user.getUsername() + " has modified the model");
 		}
 
 		@Override
 		public void commit() {
 			channel.sendCommitFromClient();
+			LOGGER.info(user.getUsername() + " has commited the changes");
 		}
 
 		@Override
 		public void store() {
-			localModel = channel.getRemoteModel();
-			ancestorModel = channel.getRemoteModel();
+			ancestorRevision = channel.getRemoteRevision();
+			localModel = ancestorRevision.getModel();
 		}
 
 		@Override
@@ -122,5 +144,8 @@ public class MergingClientBehavior extends MergingClientStatemachine {
 	public BaseUser getUser() {
 		return user;
 	}
-
+	
+	public double getServerTime() {
+		return channel.getServerTime();
+	}
 }

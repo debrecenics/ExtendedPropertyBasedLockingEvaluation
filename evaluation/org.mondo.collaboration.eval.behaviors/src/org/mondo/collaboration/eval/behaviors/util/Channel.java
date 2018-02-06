@@ -25,21 +25,24 @@ public class Channel {
 	}
 
 	public void sendCommitFromClient() {
+		server.setCurrentChannel(this);
 		server.raiseCommit();
+		server.runCycle();
+		server.executeNextCall();
 	}
-	
+
 	public void sendRequestFromClient() {
 		throw new UnsupportedOperationException();
 	}
-	
+
 	public void sendReleaseFromClient() {
 		throw new UnsupportedOperationException();
 	}
-	
-	public EObject getRemoteModel() {
-		return server.getLatestModel();
+
+	public Revision getRemoteRevision() {
+		return server.getLatestRevision();
 	}
-	
+
 	public void sendConflictFromServer() {
 		throw new UnsupportedOperationException();
 	}
@@ -55,23 +58,23 @@ public class Channel {
 	public Collection<IQuerySpecification<?>> getRequestedLocks() {
 		throw new UnsupportedOperationException();
 	}
-	
+
 	public Collection<IQuerySpecification<?>> getReleasedLocks() {
 		throw new UnsupportedOperationException();
 	}
-	
+
 	public void executeModelManipulation(EObject model) {
 		throw new UnsupportedOperationException();
 	}
-	
-	public EObject getAncestorModel() {
+
+	public Revision getAncestorRevision() {
 		throw new UnsupportedOperationException();
 	}
-	
+
 	public EObject getLocalModel() {
 		throw new UnsupportedOperationException();
 	}
-	
+
 	public static class LockingBasedChannel extends Channel {
 		LockingClientBehavior client = null;
 
@@ -87,44 +90,62 @@ public class Channel {
 
 		@Override
 		public void sendViolationFromServer() {
-			client.raiseFailure();
+			client.setNextCall(new IRaiseFunction() {
+
+				@Override
+				public void apply() {
+					client.raiseFailure();
+				}
+			});
 		}
 
 		@Override
 		public void sendAcceptedFromServer() {
-			client.raiseSuccess();
+			client.setNextCall(new IRaiseFunction() {
+
+				@Override
+				public void apply() {
+					client.raiseSuccess();
+				}
+			});
 		}
-		
+
 		@Override
 		public Collection<IQuerySpecification<?>> getRequestedLocks() {
 			return client.getLocks();
 		}
-		
+
 		@Override
 		public void sendReleaseFromClient() {
+			server.setCurrentChannel(this);
 			server.raiseRelease();
+			server.runCycle();
+			server.executeNextCall();
 		}
-		
+
 		@Override
 		public void sendRequestFromClient() {
+			server.setCurrentChannel(this);
 			server.raiseRequest();
+			server.runCycle();
+			server.executeNextCall();
 		}
-		
+
 		@Override
 		public Collection<IQuerySpecification<?>> getReleasedLocks() {
 			return client.getLocks();
 		}
-		
+
 		@Override
 		public void executeModelManipulation(EObject model) {
 			client.execute(model);
 		}
-		
+
 		@Override
-		public EObject getAncestorModel() {
-			return client.getAncestorModel();
+		public Revision getAncestorRevision() {
+			return client.getAncestorRevision();
 		}
-		
+
 		@Override
 		public EObject getLocalModel() {
 			return client.getLocalModel();
@@ -150,30 +171,48 @@ public class Channel {
 
 		@Override
 		public void sendConflictFromServer() {
-			client.raiseConflict();
+			client.setNextCall(new IRaiseFunction() {
+
+				@Override
+				public void apply() {
+					client.raiseConflict();
+				}
+			});
+
 		}
 
 		@Override
 		public void sendAcceptedFromServer() {
-			client.raiseSuccess();
-		}
-		
-		@Override
-		public void sendViolationFromServer() {
-			client.raiseViolation();
+			client.setNextCall(new IRaiseFunction() {
+
+				@Override
+				public void apply() {
+					client.raiseSuccess();
+				}
+			});
 		}
 
-		
+		@Override
+		public void sendViolationFromServer() {
+			client.setNextCall(new IRaiseFunction() {
+
+				@Override
+				public void apply() {
+					client.raiseViolation();
+				}
+			});
+		}
+
 		@Override
 		public void executeModelManipulation(EObject model) {
 			client.execute(model);
 		}
-		
+
 		@Override
-		public EObject getAncestorModel() {
-			return client.getAncestorModel();
+		public Revision getAncestorRevision() {
+			return client.getAncestorRevision();
 		}
-		
+
 		@Override
 		public EObject getLocalModel() {
 			return client.getLocalModel();

@@ -8,6 +8,7 @@ import java.io.IOException;
 public class QueryGenerator {
 
 	public static final String QUERY_PATH = "D:\\Work\\Eclipse\\Acta\\git\\lock-and-merge-evaluation\\evaluation\\org.mondo.collaboration.eval.behaviors\\src-gen\\org\\mondo\\collaboration\\queries\\queries.eiq";
+	public static final int USER_SIZE = 15;
 
 	public static void main(String[] args) throws IOException {
 		generate();
@@ -23,7 +24,7 @@ public class QueryGenerator {
 			br.write(generateTestingQuery(""));
 			br.write(generateReplacementQuery(""));
 
-			for (int i = 0; i < Configuration.USER_SIZE; i++) {
+			for (int i = 0; i < USER_SIZE; i++) {
 				br.write(generateMaintainanceQuery(String.valueOf(i)));
 				br.write(generateTestingQuery(String.valueOf(i)));
 				br.write(generateReplacementQuery(String.valueOf(i)));
