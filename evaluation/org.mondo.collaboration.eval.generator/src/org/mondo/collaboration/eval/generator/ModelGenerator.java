@@ -72,10 +72,14 @@ public class ModelGenerator {
 			EObject eObject = (EObject) iterator.next();
 			if(eObject instanceof Module) {
 				Module module = (Module) eObject;
-				module.setId(String.valueOf(i++));
+				if(module instanceof Control)
+					module.setId("control"+String.valueOf(i++));
+				else
+					module.setId("composite"+String.valueOf(i++));
+				
 			} else if (eObject instanceof Signal) {
 				Signal signal = (Signal) eObject;
-				signal.setId(String.valueOf(i++));
+				signal.setId("signal"+String.valueOf(i++));
 			} else {
 				throw new IllegalArgumentException();
 			}
@@ -89,7 +93,6 @@ public class ModelGenerator {
 		}
 	}
 	
-	public static final String[] ABC = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"};
 	public static final String DUMMY = "Dummy";
 	
 	static Iterator<String> vendorIterator;// = vendorMap.iterator();
@@ -163,10 +166,10 @@ public class ModelGenerator {
 
 	private static List<String> raffleValues(int maxD, int maxF, int maxU, int multiplier) {
 		List<String> list = Lists.newArrayList();
-		for(int u = 1; u <= maxU; list.add(new String(ABC[u])), u++);
-		for(int u = 1; u <= maxU; list.add(new String(ABC[u])), u++);
-		for(int u = 1; u <= maxU; list.add(new String(ABC[u])), u++);
-		for(int u = 1; u <= maxU; list.add(new String(ABC[u])), u++);
+		for(int u = 0; u < maxU; list.add(String.valueOf(u)), u++);
+		for(int u = 0; u < maxU; list.add(String.valueOf(u)), u++);
+		for(int u = 0; u < maxU; list.add(String.valueOf(u)), u++);
+		for(int u = 0; u < maxU; list.add(String.valueOf(u)), u++);
 		
 		while(list.size() < maxD * maxF * multiplier) {
 			list.add(DUMMY);

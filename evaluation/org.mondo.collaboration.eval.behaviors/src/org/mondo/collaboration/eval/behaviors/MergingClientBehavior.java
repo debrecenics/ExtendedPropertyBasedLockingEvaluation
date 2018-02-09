@@ -5,11 +5,14 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.eclipse.emf.compare.Comparison;
 import org.eclipse.emf.compare.EMFCompare;
+import org.eclipse.emf.compare.match.IMatchEngine.Factory.Registry;
 import org.eclipse.emf.compare.scope.DefaultComparisonScope;
 import org.eclipse.emf.compare.scope.IComparisonScope;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.viatra.dse.merge.DSEMergeManager;
 import org.eclipse.viatra.dse.merge.DSEMergeManager.Solution;
+import org.eclipse.viatra.dse.merge.emf.compare.EMFCompareMatchEngineRegistry;
 import org.eclipse.viatra.dse.merge.emf.compare.EMFCompareTranslator;
 import org.eclipse.viatra.dse.merge.model.ChangeSet;
 import org.mondo.collaboration.eval.behaviors.mergingclient.MergingClientStatemachine;
@@ -31,29 +34,27 @@ public class MergingClientBehavior extends MergingClientStatemachine {
 	private MergeBasedChannel channel;
 	List<Long> mergeTime = Lists.newArrayList();
 	List<Double> retryTime = Lists.newArrayList();
-	
+
 	IRaiseFunction nextCall = null;
-	
+
 	Logger LOGGER = Logger.getLogger(MergingClientBehavior.class);
-	
+
 	public MergingClientBehavior(BaseUser user, ServerBehavior server) {
 		this.user = user;
-		
-		ancestorRevision = server.getLatestRevision();
-		localModel = ancestorRevision.getModel();
-		
+
 		getSCInterface().setSCInterfaceOperationCallback(new OperationCallback());
 		channel = Channel.createMergeBasedChannel(server, this);
+		update();
 	}
 
 	public void setNextCall(IRaiseFunction nextCall) {
 		this.nextCall = nextCall;
 	}
-	
+
 	public IRaiseFunction getNextCall() {
 		return nextCall;
 	}
-	
+
 	public String getUsername() {
 		return user.getUsername();
 	}
@@ -71,17 +72,17 @@ public class MergingClientBehavior extends MergingClientStatemachine {
 	}
 
 	public long getLastMergeTime() {
-		return mergeTime.get(mergeTime.size()-1);
+		return mergeTime.get(mergeTime.size() - 1);
 	}
-	
+
 	public long getMergeTime() {
 		return mergeTime.stream().reduce(0l, Long::sum);
 	}
-	
+
 	public double getRetryTime() {
 		return retryTime.stream().reduce(0d, Double::sum);
 	}
-	
+
 	private final class OperationCallback implements SCInterfaceOperationCallback {
 		private final MergeConfigurator MERGE_CONFIGURATOR = new MergeConfigurator();
 		private double waitStart;
@@ -90,25 +91,33 @@ public class MergingClientBehavior extends MergingClientStatemachine {
 		public void resolve() {
 			LOGGER.info(user.getUsername() + " is resolving the merge");
 			long start = System.nanoTime();
-			IComparisonScope scopeLO = new DefaultComparisonScope(
-					channel.getLocalModel(), 
-					channel.getAncestorRevision().getModel(), null);			
-			
-			Comparison comparisonLO = EMFCompare.builder().build().compare(scopeLO);
-			ChangeSet changeSetLO = new EMFCompareTranslator().translate(comparisonLO, MERGE_CONFIGURATOR.getIdMapper());
-			
-			IComparisonScope scopeRO = new DefaultComparisonScope(
-					channel.getRemoteRevision().getModel(), 
-					channel.getAncestorRevision().getModel(), null);			
-			
-			Comparison comparisonRO = EMFCompare.builder().build().compare(scopeRO);
-			ChangeSet changeSetRO = new EMFCompareTranslator().translate(comparisonRO, MERGE_CONFIGURATOR.getIdMapper());
-			
-			DSEMergeManager manager = DSEMergeManager.create(channel.getAncestorRevision().getModel(), changeSetLO, changeSetRO, MERGE_CONFIGURATOR);
+
+			IComparisonScope scopeLO = new DefaultComparisonScope(channel.getLocalModel(),
+					channel.getAncestorRevision().getModel(), null);
+
+			Registry registry = EMFCompareMatchEngineRegistry
+					.createDSEMergeSpecificRegistry(MERGE_CONFIGURATOR.getIdMapper());
+			Comparison comparisonLO = EMFCompare.builder().setMatchEngineFactoryRegistry(registry).build()
+					.compare(scopeLO);
+			EMFCompareTranslator translatorLO = new EMFCompareTranslator(comparisonLO,
+					MERGE_CONFIGURATOR.getIdMapper());
+			ChangeSet changeSetLO = translatorLO.translate();
+
+			IComparisonScope scopeRO = new DefaultComparisonScope(channel.getRemoteRevision().getModel(),
+					channel.getAncestorRevision().getModel(), null);
+
+			Comparison comparisonRO = EMFCompare.builder().setMatchEngineFactoryRegistry(registry).build()
+					.compare(scopeRO);
+			EMFCompareTranslator translatorRO = new EMFCompareTranslator(comparisonRO,
+					MERGE_CONFIGURATOR.getIdMapper());
+			ChangeSet changeSetRO = translatorRO.translate();
+
+			DSEMergeManager manager = DSEMergeManager.create(channel.getAncestorRevision().getModel(), changeSetLO,
+					changeSetRO, MERGE_CONFIGURATOR);
 			Solution solution = manager.start().iterator().next();
 			localModel = solution.getScope().getOrigin();
 			long end = System.nanoTime();
-			mergeTime.add(end-start);			
+			mergeTime.add(end - start);
 		}
 
 		@Override
@@ -125,8 +134,7 @@ public class MergingClientBehavior extends MergingClientStatemachine {
 
 		@Override
 		public void store() {
-			ancestorRevision = channel.getRemoteRevision();
-			localModel = ancestorRevision.getModel();
+			update();
 		}
 
 		@Override
@@ -144,8 +152,14 @@ public class MergingClientBehavior extends MergingClientStatemachine {
 	public BaseUser getUser() {
 		return user;
 	}
-	
+
 	public double getServerTime() {
 		return channel.getServerTime();
+	}
+
+	private void update() {
+		ancestorRevision = new Revision(EcoreUtil.copy(channel.getRemoteRevision().getModel()),
+				channel.getRemoteRevision().getRevision());
+		localModel = EcoreUtil.copy(ancestorRevision.getModel());
 	}
 }

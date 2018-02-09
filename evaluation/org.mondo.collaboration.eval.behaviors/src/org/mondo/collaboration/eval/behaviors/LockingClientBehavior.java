@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.incquery.runtime.api.IQuerySpecification;
 import org.mondo.collaboration.eval.behaviors.lockingclient.LockingClientStatemachine;
 import org.mondo.collaboration.eval.behaviors.users.BaseUser;
@@ -28,11 +29,9 @@ public class LockingClientBehavior extends LockingClientStatemachine {
 	public LockingClientBehavior(BaseUser user, ServerBehavior server) {
 		this.user = user;
 
-		ancestorRevision = server.getLatestRevision();
-		localModel = ancestorRevision.getModel();
-		
 		getSCInterface().setSCInterfaceOperationCallback(new OperationCallback());
 		channel = Channel.createLockBasedChannel(server, this);
+		update();
 	}
 
 	public void setNextCall(IRaiseFunction nextCall) {
@@ -103,8 +102,7 @@ public class LockingClientBehavior extends LockingClientStatemachine {
 		
 		@Override
 		public void store() {
-			ancestorRevision = channel.getRemoteRevision();
-			localModel = ancestorRevision.getModel();
+			update();
 		}
 	}
 
@@ -118,5 +116,10 @@ public class LockingClientBehavior extends LockingClientStatemachine {
 	
 	public double getServerTime() {
 		return channel.getServerTime();
+	}
+	
+	private void update() {
+		ancestorRevision = new Revision(EcoreUtil.copy(channel.getRemoteRevision().getModel()), channel.getRemoteRevision().getRevision());
+		localModel = EcoreUtil.copy(ancestorRevision.getModel());
 	}
 }

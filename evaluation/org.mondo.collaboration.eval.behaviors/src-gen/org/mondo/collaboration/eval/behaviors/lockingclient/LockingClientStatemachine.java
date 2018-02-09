@@ -50,6 +50,7 @@ public class LockingClientStatemachine implements ILockingClientStatemachine {
 		main_region_Idle,
 		main_region_Execute,
 		main_region_Violation,
+		main_region_Committed,
 		$NullState$
 	};
 	
@@ -130,6 +131,8 @@ public class LockingClientStatemachine implements ILockingClientStatemachine {
 			return stateVector[0] == State.main_region_Execute;
 		case main_region_Violation:
 			return stateVector[0] == State.main_region_Violation;
+		case main_region_Committed:
+			return stateVector[0] == State.main_region_Committed;
 		default:
 			return false;
 		}
@@ -160,19 +163,19 @@ public class LockingClientStatemachine implements ILockingClientStatemachine {
 	}
 	
 	private boolean check_main_region_Execute_tr0_tr0() {
-		return sCInterface.failure;
-	}
-	
-	private boolean check_main_region_Execute_tr1_tr1() {
-		return sCInterface.success;
-	}
-	
-	private boolean check_main_region_Execute_tr2_tr2() {
 		return sCInterface.finish;
 	}
 	
 	private boolean check_main_region_Violation_tr0_tr0() {
 		return sCInterface.request;
+	}
+	
+	private boolean check_main_region_Committed_tr0_tr0() {
+		return sCInterface.success;
+	}
+	
+	private boolean check_main_region_Committed_tr1_tr1() {
+		return sCInterface.failure;
 	}
 	
 	private void effect_main_region_Idle_tr0() {
@@ -184,23 +187,9 @@ public class LockingClientStatemachine implements ILockingClientStatemachine {
 	
 	private void effect_main_region_Execute_tr0() {
 		exitSequence_main_region_Execute();
-		sCInterface.operationCallback.release();
-		
-		enterSequence_main_region_Violation_default();
-	}
-	
-	private void effect_main_region_Execute_tr1() {
-		exitSequence_main_region_Execute();
-		sCInterface.operationCallback.release();
-		
-		enterSequence_main_region_Idle_default();
-	}
-	
-	private void effect_main_region_Execute_tr2() {
-		exitSequence_main_region_Execute();
 		sCInterface.operationCallback.commit();
 		
-		enterSequence_main_region_Execute_default();
+		enterSequence_main_region_Committed_default();
 	}
 	
 	private void effect_main_region_Violation_tr0() {
@@ -208,6 +197,20 @@ public class LockingClientStatemachine implements ILockingClientStatemachine {
 		sCInterface.operationCallback.lock();
 		
 		enterSequence_main_region_Execute_default();
+	}
+	
+	private void effect_main_region_Committed_tr0() {
+		exitSequence_main_region_Committed();
+		sCInterface.operationCallback.release();
+		
+		enterSequence_main_region_Idle_default();
+	}
+	
+	private void effect_main_region_Committed_tr1() {
+		exitSequence_main_region_Committed();
+		sCInterface.operationCallback.release();
+		
+		enterSequence_main_region_Violation_default();
 	}
 	
 	/* Entry action for state 'Idle'. */
@@ -251,6 +254,12 @@ public class LockingClientStatemachine implements ILockingClientStatemachine {
 		stateVector[0] = State.main_region_Violation;
 	}
 	
+	/* 'default' enter sequence for state Committed */
+	private void enterSequence_main_region_Committed_default() {
+		nextStateIndex = 0;
+		stateVector[0] = State.main_region_Committed;
+	}
+	
 	/* 'default' enter sequence for region main region */
 	private void enterSequence_main_region_default() {
 		react_main_region__entry_Default();
@@ -276,6 +285,12 @@ public class LockingClientStatemachine implements ILockingClientStatemachine {
 		exitAction_main_region_Violation();
 	}
 	
+	/* Default exit sequence for state Committed */
+	private void exitSequence_main_region_Committed() {
+		nextStateIndex = 0;
+		stateVector[0] = State.$NullState$;
+	}
+	
 	/* Default exit sequence for region main region */
 	private void exitSequence_main_region() {
 		switch (stateVector[0]) {
@@ -287,6 +302,9 @@ public class LockingClientStatemachine implements ILockingClientStatemachine {
 			break;
 		case main_region_Violation:
 			exitSequence_main_region_Violation();
+			break;
+		case main_region_Committed:
+			exitSequence_main_region_Committed();
 			break;
 		default:
 			break;
@@ -304,14 +322,6 @@ public class LockingClientStatemachine implements ILockingClientStatemachine {
 	private void react_main_region_Execute() {
 		if (check_main_region_Execute_tr0_tr0()) {
 			effect_main_region_Execute_tr0();
-		} else {
-			if (check_main_region_Execute_tr1_tr1()) {
-				effect_main_region_Execute_tr1();
-			} else {
-				if (check_main_region_Execute_tr2_tr2()) {
-					effect_main_region_Execute_tr2();
-				}
-			}
 		}
 	}
 	
@@ -319,6 +329,17 @@ public class LockingClientStatemachine implements ILockingClientStatemachine {
 	private void react_main_region_Violation() {
 		if (check_main_region_Violation_tr0_tr0()) {
 			effect_main_region_Violation_tr0();
+		}
+	}
+	
+	/* The reactions of state Committed. */
+	private void react_main_region_Committed() {
+		if (check_main_region_Committed_tr0_tr0()) {
+			effect_main_region_Committed_tr0();
+		} else {
+			if (check_main_region_Committed_tr1_tr1()) {
+				effect_main_region_Committed_tr1();
+			}
 		}
 	}
 	
@@ -342,6 +363,9 @@ public class LockingClientStatemachine implements ILockingClientStatemachine {
 				break;
 			case main_region_Violation:
 				react_main_region_Violation();
+				break;
+			case main_region_Committed:
+				react_main_region_Committed();
 				break;
 			default:
 				// $NullState$

@@ -33,10 +33,10 @@ public class UserMaintenance extends BaseUser {
 
 				@Override
 				public void process(UserMMatch match) {
-					if(direction == Direction.FORWARD)
+					//if(direction == Direction.FORWARD)
 						match.getSgn().setFrequency(match.getSgn().getFrequency() * 2);
-					else
-						match.getSgn().setFrequency(match.getSgn().getFrequency() / 2);					
+					//else
+						//match.getSgn().setFrequency(match.getSgn().getFrequency() / 2);					
 				}
 			});
 		} catch (IncQueryException e) {

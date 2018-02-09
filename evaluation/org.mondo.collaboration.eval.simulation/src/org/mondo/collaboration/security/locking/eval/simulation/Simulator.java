@@ -66,7 +66,7 @@ public class Simulator {
 
 	private void setup() {
 		ResourceSet rset = new ResourceSetImpl();
-		Resource resource = rset.getResource(URI.createFileURI(String.format(MODEL_PATH, 9,9,9)),true);
+		Resource resource = rset.getResource(URI.createFileURI(String.format(MODEL_PATH, 3,3,3)),true);
 		
 		server = new ServerBehavior(resource.getContents().get(0));
 		server.init();

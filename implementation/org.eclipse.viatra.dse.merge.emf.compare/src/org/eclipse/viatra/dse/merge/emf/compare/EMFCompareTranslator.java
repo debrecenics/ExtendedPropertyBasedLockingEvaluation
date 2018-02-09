@@ -54,6 +54,14 @@ public class EMFCompareTranslator {
     private Map<Object, Create> created = Maps.newHashMap();
     private Map<Object, Delete> deleted = Maps.newHashMap();
     private Map<Change, EObject> mapToObject = Maps.newHashMap();
+	private ChangeSet changeSet;
+	private Comparison compare;
+    
+    public EMFCompareTranslator(Comparison compare, DSEMergeIdMapper mapper) {
+    	this.compare = compare;
+		this.mapper = mapper;
+        this.changeSet = ModelFactory.eINSTANCE.createChangeSet();
+    }
     
     /**
      * Executes the translation
@@ -61,12 +69,14 @@ public class EMFCompareTranslator {
      * @param mapper - ID mapper for selecting id of objects
      * @return the translated change set
      */
-    public ChangeSet translate(Comparison compare, DSEMergeIdMapper mapper) {
-        this.mapper = mapper;
-        ChangeSet changeSet = ModelFactory.eINSTANCE.createChangeSet();
-        processFeatureChangeSpec(compare, changeSet);
+    public ChangeSet translate() {
+        processFeatureChangeSpec();
+        processDeletionChanges();        
+        return changeSet;
+    }
 
-        Collection<Change> toDelete = Lists.newArrayList();
+	private void processDeletionChanges() {
+		Collection<Change> toDelete = Lists.newArrayList();
         for(Object key : created.keySet()) {
             if(deleted.containsKey(key)) {
                 compareAttributes(created.get(key), deleted.get(key), changeSet);
@@ -87,9 +97,7 @@ public class EMFCompareTranslator {
             }
             EcoreUtil.delete(change);
         }
-        
-        return changeSet;
-    }
+	}
 
     private void compareAttributes(Create create, Delete delete, ChangeSet changeSet) {
         EObject newObject = mapToObject.get(create);
@@ -107,8 +115,7 @@ public class EMFCompareTranslator {
         }
     }
 
-    private void processFeatureChangeSpec(Comparison compare, ChangeSet changeSet) {
-
+    private void processFeatureChangeSpec() {
         EList<Diff> list = compare.getDifferences();
         for (Diff diff : list) {
             if (diff instanceof ReferenceChangeSpec) {
@@ -227,7 +234,8 @@ public class EMFCompareTranslator {
     private boolean processIfCreate(ReferenceChangeSpec diff, ChangeSet changeSet) {
         EReference reference = diff.getReference();
         if (reference.isContainment() && diff.getKind() != DifferenceKind.DELETE && diff.getKind() != DifferenceKind.MOVE) {
-
+        	if(skipDiff(diff)) return true;
+        	
             EObject object = diff.getValue();
             createChange(changeSet, reference, object);
             return true;
@@ -289,7 +297,8 @@ public class EMFCompareTranslator {
     
     private boolean processIfDelete(ReferenceChangeSpec diff, ChangeSet changeSet) {
         if (diff.getKind() == DifferenceKind.DELETE && diff.getReference().isContainment()) {
-
+        	if(skipDiff(diff)) return true;
+        	
             EObject object = diff.getValue();
             Delete delete = ModelFactory.eINSTANCE.createDelete();
             delete.setExecutable(true);
@@ -302,7 +311,39 @@ public class EMFCompareTranslator {
         return false;
     }
 
-    private void insertReference(Create create, EStructuralFeature feature, EObject src, EObject trg, ChangeSet set,
+    private boolean skipDiff(ReferenceChangeSpec diff) {
+		EObject left = diff.getMatch().getLeft();
+		if(left == null) return false;
+		EObject right = diff.getMatch().getRight();
+		if(right == null) return false;
+		Object leftId = mapper.getId(left);
+		Object rightId = mapper.getId(right);
+		if(!leftId.equals(rightId)) return false;
+		
+		EReference reference = diff.getReference();
+		Object valueId = mapper.getId(diff.getValue());
+		
+		boolean leftContains = false, rightContains = false;
+		for(EObject obj : (EList<EObject>)left.eGet(reference)) {
+			if(mapper.getId(obj).equals(valueId)) {
+				leftContains = true;
+				break;
+			}
+		};
+
+		for(EObject obj : (EList<EObject>)right.eGet(reference)) {
+			if(mapper.getId(obj).equals(valueId)) {
+				rightContains = true;
+				break;
+			}
+		};
+		
+		if(leftContains && rightContains) 
+			return true;		
+    	return false;
+	}
+
+	private void insertReference(Create create, EStructuralFeature feature, EObject src, EObject trg, ChangeSet set,
             Kind kind) {
         Reference reference = ModelFactory.eINSTANCE.createReference();
         reference.setFeature(feature);
