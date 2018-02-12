@@ -14,7 +14,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -24,10 +23,7 @@ import org.eclipse.core.runtime.InvalidRegistryObjectException;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
-import org.eclipse.incquery.runtime.api.IMatchProcessor;
-import org.eclipse.incquery.runtime.api.IPatternMatch;
 import org.eclipse.incquery.runtime.api.IQuerySpecification;
-import org.eclipse.incquery.runtime.api.IncQueryMatcher;
 import org.eclipse.incquery.runtime.exception.IncQueryException;
 import org.eclipse.viatra.dse.api.DSETransformationRule;
 import org.eclipse.viatra.dse.api.DesignSpaceExplorer;
@@ -70,7 +66,6 @@ public class DSEMergeManager {
 
     static Logger logger = Logger.getLogger(DSEMergeManager.class);
 
-    private IQuerySpecification<IncQueryMatcher<IPatternMatch>> id2eobject;
     private DSEMergeIdMapper idMapper;
 
     /**
@@ -127,13 +122,11 @@ public class DSEMergeManager {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private void configureMerge(DSEMergeConfigurator configurator) {
         try {
             metamodel = configurator.getMetamodel();
             objectives = configurator.getObjectives();
             rules = configurator.getRules();
-            id2eobject = (IQuerySpecification<IncQueryMatcher<IPatternMatch>>) configurator.getId2EObject();
             idMapper = configurator.getIdMapper();
         } catch (IncQueryException e) {
             logger.error(e.getMessage(), e);
@@ -189,7 +182,6 @@ public class DSEMergeManager {
         configureDSE();
 
         //Create strategy
-        Logger.getLogger(DSEMergeStrategy.class).setLevel(Level.DEBUG);
         DSEMergeStrategy strategy = new DSEMergeStrategy();
         
         //Start Exploration
@@ -246,17 +238,6 @@ public class DSEMergeManager {
             s.add(new Solution(scope, solution));
         }
         return s;
-    }
-
-    /**
-     * An empty match processor.
-     */
-    private class DefaultMatchProcessor<T extends IPatternMatch> implements IMatchProcessor<T> {
-
-        @Override
-        public void process(T match) {
-        }
-
     }
 
     /**

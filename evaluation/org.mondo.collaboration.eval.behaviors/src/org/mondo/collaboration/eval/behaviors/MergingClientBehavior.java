@@ -3,17 +3,12 @@ package org.mondo.collaboration.eval.behaviors;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.eclipse.emf.compare.Comparison;
-import org.eclipse.emf.compare.EMFCompare;
-import org.eclipse.emf.compare.match.IMatchEngine.Factory.Registry;
-import org.eclipse.emf.compare.scope.DefaultComparisonScope;
-import org.eclipse.emf.compare.scope.IComparisonScope;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.eclipse.viatra.dse.merge.DSEMergeIdMapper;
 import org.eclipse.viatra.dse.merge.DSEMergeManager;
 import org.eclipse.viatra.dse.merge.DSEMergeManager.Solution;
-import org.eclipse.viatra.dse.merge.emf.compare.EMFCompareMatchEngineRegistry;
-import org.eclipse.viatra.dse.merge.emf.compare.EMFCompareTranslator;
+import org.eclipse.viatra.dse.merge.emf.compare.EMFCompareHelper;
 import org.eclipse.viatra.dse.merge.model.ChangeSet;
 import org.mondo.collaboration.eval.behaviors.mergingclient.MergingClientStatemachine;
 import org.mondo.collaboration.eval.behaviors.users.BaseUser;
@@ -92,28 +87,14 @@ public class MergingClientBehavior extends MergingClientStatemachine {
 			LOGGER.info(user.getUsername() + " is resolving the merge");
 			long start = System.nanoTime();
 
-			IComparisonScope scopeLO = new DefaultComparisonScope(channel.getLocalModel(),
-					channel.getAncestorRevision().getModel(), null);
+			EObject ancestor = channel.getAncestorRevision().getModel();
+			EObject remoteModel = channel.getRemoteRevision().getModel();
+			DSEMergeIdMapper mapper = MERGE_CONFIGURATOR.getIdMapper();
 
-			Registry registry = EMFCompareMatchEngineRegistry
-					.createDSEMergeSpecificRegistry(MERGE_CONFIGURATOR.getIdMapper());
-			Comparison comparisonLO = EMFCompare.builder().setMatchEngineFactoryRegistry(registry).build()
-					.compare(scopeLO);
-			EMFCompareTranslator translatorLO = new EMFCompareTranslator(comparisonLO,
-					MERGE_CONFIGURATOR.getIdMapper());
-			ChangeSet changeSetLO = translatorLO.translate();
+			ChangeSet changeSetLO = EMFCompareHelper.calculateChanges(localModel, ancestor, mapper);
+			ChangeSet changeSetRO = EMFCompareHelper.calculateChanges(remoteModel, ancestor, mapper);
 
-			IComparisonScope scopeRO = new DefaultComparisonScope(channel.getRemoteRevision().getModel(),
-					channel.getAncestorRevision().getModel(), null);
-
-			Comparison comparisonRO = EMFCompare.builder().setMatchEngineFactoryRegistry(registry).build()
-					.compare(scopeRO);
-			EMFCompareTranslator translatorRO = new EMFCompareTranslator(comparisonRO,
-					MERGE_CONFIGURATOR.getIdMapper());
-			ChangeSet changeSetRO = translatorRO.translate();
-
-			DSEMergeManager manager = DSEMergeManager.create(channel.getAncestorRevision().getModel(), changeSetLO,
-					changeSetRO, MERGE_CONFIGURATOR);
+			DSEMergeManager manager = DSEMergeManager.create(ancestor, changeSetLO, changeSetRO, MERGE_CONFIGURATOR);
 			Solution solution = manager.start().iterator().next();
 			localModel = solution.getScope().getOrigin();
 			long end = System.nanoTime();
@@ -129,7 +110,7 @@ public class MergingClientBehavior extends MergingClientStatemachine {
 		@Override
 		public void commit() {
 			channel.sendCommitFromClient();
-			LOGGER.info(user.getUsername() + " has commited the changes");
+			LOGGER.info(user.getUsername() + " has committed the changes");
 		}
 
 		@Override

@@ -12,22 +12,19 @@ public class Configuration {
 		WAIT, EXEC, RETRY
 	}
 
-	public static final String EXEC = "exec";
-	public static final String WAIT = "wait";
+	public static double TimeLimit = 4; // h
 
-	public static double TimeLimit = 2 * 24; // h
-
-	public static int WaitMeanR = 3; // h
-	public static int WaitMeanT = 3; // h
+	public static int WaitMeanR = 12; // h
+	public static int WaitMeanT = 6;  // h
 	public static int WaitMeanM = 3;  // h
 
-	public static int ExecMeanR = 3; // h
+	public static int ExecMeanR = 6; // h
 	public static int ExecMeanT = 3; // h
-	public static int ExecMeanM = 3; // h
+	public static int ExecMeanM = 1; // h
 
 	public static int RetryMeanR = 3; // h
-	public static int RetryMeanT = 3; // h
-	public static int RetryMeanM = 3; // h
+	public static int RetryMeanT = 2; // h
+	public static int RetryMeanM = 1; // h
 
 	public static Table<UserType, TimeType, Distribution> distributionTable = HashBasedTable.create();
 

@@ -34,7 +34,6 @@ public class ServerBehavior extends ServerStatemachine {
 	public static final Logger LOGGER = Logger.getLogger(ServerBehavior.class);
 	
 	private double currentTime = 0d;
-	
 	private VoidFunction nextCall = null;
 	
 	protected Channel channel;
@@ -188,6 +187,8 @@ public class ServerBehavior extends ServerStatemachine {
 	}
 	
 	public void setCurrentTime(double time) {
+		if((int) time > (int) currentTime)
+			System.out.println("Elapsed hours: " + String.valueOf((int)time));
 		this.currentTime = time;
 	}
 	

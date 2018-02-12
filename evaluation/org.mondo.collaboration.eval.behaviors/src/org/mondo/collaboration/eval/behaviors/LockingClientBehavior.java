@@ -91,6 +91,7 @@ public class LockingClientBehavior extends LockingClientStatemachine {
 
 		@Override
 		public void execute() {
+			update();
 			localModel = user.execute(localModel);
 			
 		}

@@ -46,12 +46,12 @@ public class ModelGenerator {
 	
 	private static void generateModel(int f, int d, int u) throws Exception {
 		Composite model = ModelGenerator.generate(f,u,d);
-		save(	String.format(System.getProperty("user.dir") + "/instances/model-%04d-%04d-%04d.xmi".replace('/', File.separatorChar), f,d,u), 
+		save(	String.format(System.getProperty("user.dir") + "/../instances/model-%04d-%04d-%04d.xmi".replace('/', File.separatorChar), f,d,u), 
 				model);
 		
-		CharSequence yed = calculateYed(model);
-		save(	String.format(System.getProperty("user.dir") + "/instances/model-%04d-%04d-%04d.gml".replace('/', File.separatorChar), f,d,u), 
-				yed);
+//		CharSequence yed = calculateYed(model);
+//		save(	String.format(System.getProperty("user.dir") + "/instances/model-%04d-%04d-%04d.gml".replace('/', File.separatorChar), f,d,u), 
+//				yed);
 	}
 	
 	private static CharSequence calculateYed(Composite model) {

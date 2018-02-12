@@ -53,7 +53,7 @@ public abstract class BaseUser implements IModelManipulator {
 	public abstract UserType getUsertype();
 
 	public String getUsername() {
-		return "user" + id;
+		return "user" + id + getUsertype();
 	}
 
 	public final Collection<IQuerySpecification<?>> getLocks() {

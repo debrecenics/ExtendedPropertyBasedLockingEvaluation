@@ -25,6 +25,10 @@ public abstract class Event {
 		this.client = client;
 	}
 
+	public IStatemachine getClient() {
+		return client;
+	}
+	
 	public void execute() {
 		doExecute();
 		client.runCycle();

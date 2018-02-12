@@ -13,11 +13,13 @@ package org.eclipse.viatra.dse.merge.emf.compare;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.compare.Comparison;
 import org.eclipse.emf.compare.Diff;
 import org.eclipse.emf.compare.DifferenceKind;
+import org.eclipse.emf.compare.DifferenceSource;
 import org.eclipse.emf.compare.internal.spec.AttributeChangeSpec;
 import org.eclipse.emf.compare.internal.spec.ReferenceChangeSpec;
 import org.eclipse.emf.ecore.EAttribute;
@@ -38,8 +40,11 @@ import org.eclipse.viatra.dse.merge.model.Kind;
 import org.eclipse.viatra.dse.merge.model.ModelFactory;
 import org.eclipse.viatra.dse.merge.model.Reference;
 
+import static org.eclipse.viatra.dse.merge.emf.compare.EMFCompareTranslatorHelper.*;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  * This class is responsible for translating {@link Comparison} to {@link ChangeSet}
@@ -51,8 +56,9 @@ import com.google.common.collect.Maps;
 public class EMFCompareTranslator {
 
     private DSEMergeIdMapper mapper;
-    private Map<Object, Create> created = Maps.newHashMap();
-    private Map<Object, Delete> deleted = Maps.newHashMap();
+    private Map<Id, Create> created = Maps.newHashMap();
+    private Map<Id, Delete> deleted = Maps.newHashMap();
+    private Set<Id> doNotTouch = Sets.newHashSet();
     private Map<Change, EObject> mapToObject = Maps.newHashMap();
 	private ChangeSet changeSet;
 	private Comparison compare;
@@ -70,339 +76,184 @@ public class EMFCompareTranslator {
      * @return the translated change set
      */
     public ChangeSet translate() {
-        processFeatureChangeSpec();
-        processDeletionChanges();        
+        process();
         return changeSet;
     }
 
-	private void processDeletionChanges() {
-		Collection<Change> toDelete = Lists.newArrayList();
-        for(Object key : created.keySet()) {
-            if(deleted.containsKey(key)) {
-                compareAttributes(created.get(key), deleted.get(key), changeSet);
-                toDelete.add(created.get(key));
-                toDelete.add(deleted.get(key));
-            }
-        }
-        
-        Iterator<Change> iterator = toDelete.iterator();
-        while(iterator.hasNext()) {
-            Change change = iterator.next();
-            if(change instanceof Create) {
-                Create create = (Create) change;
-                EList<Feature> features = create.getFeatures();
-                while(!features.isEmpty()) {
-                    EcoreUtil.delete(features.get(0));
-                }
-            }
-            EcoreUtil.delete(change);
-        }
-	}
-
-    private void compareAttributes(Create create, Delete delete, ChangeSet changeSet) {
-        EObject newObject = mapToObject.get(create);
-        EObject oldObject = mapToObject.get(delete);
-        
-        if(newObject.eClass() == oldObject.eClass()) {
-            EList<EAttribute> attributes = newObject.eClass().getEAllAttributes();
-            for (EAttribute attribute : attributes) {
-                Object newValue = newObject.eGet(attribute);
-                Object oldValue = oldObject.eGet(attribute);
-                if((newValue == null && oldValue != null ) || (newValue != null && !newValue.equals(oldValue))) {
-                    insertAttribute(null, attribute, newObject, newValue, changeSet, Kind.SET);
-                }
-            }
-        }
-    }
-
-    private void processFeatureChangeSpec() {
+    private void process() {
         EList<Diff> list = compare.getDifferences();
         for (Diff diff : list) {
-            if (diff instanceof ReferenceChangeSpec) {
-                processReferenceChangeSpec((ReferenceChangeSpec) diff, changeSet);
+        	if(diff.getSource() == DifferenceSource.RIGHT) continue;
+        	if (diff instanceof AttributeChangeSpec) {
+                processAttributeChangeSpec((AttributeChangeSpec) diff);
             }
-            if (diff instanceof AttributeChangeSpec) {
-                processAttributeChangeSpec((AttributeChangeSpec) diff, changeSet);
+        	if (diff instanceof ReferenceChangeSpec) {
+                processReferenceChangeSpec((ReferenceChangeSpec) diff);
             }
         }
     }
-
-    private void processAttributeChangeSpec(AttributeChangeSpec diff, ChangeSet changeSet) {
-
-        EObject original = diff.getMatch().getRight();
-        if (original == null) {
-            return; // A create operation will come
-        }
-        EObject src = diff.getMatch().getLeft();
-        EObject object = src;
-        if (object == null)
-            return; // A delete operation will come
-
-        EAttribute feature = diff.getAttribute();
-        Object newValue = diff.getValue();
-        if (mapper.isDeterminativeFeature(feature)) {
-            EObject o = diff.getMatch().getLeft();
-            createChange(changeSet, (EReference) o.eContainingFeature(), o);
-            deleteChange(changeSet, diff.getMatch().getRight().eGet(feature));
-            return;
-        }
-
+    
+    private void processAttributeChangeSpec(AttributeChangeSpec diff) {
+    	if(processDeletion(diff)) return;
+    	if(processCreation(diff)) return;    	
+    	if(!checkPrecondition(diff)) return;
+    	
+    	Id sourceId = createIdFromEObject(getModified(diff), mapper);
         Attribute attribute = ModelFactory.eINSTANCE.createAttribute();
-        attribute.setFeature(feature);
-        attribute.setValue(newValue);
+        attribute.setFeature(diff.getAttribute());
+        attribute.setValue(diff.getValue());
         attribute.setExecutable(true);
-        attribute.setSrc(createFromEObject(src));
+        attribute.setSrc(sourceId);
 
-        switch (diff.getKind()) {
-        case ADD:
-            attribute.setKind(Kind.ADD);
-            break;
-        case CHANGE:
-            attribute.setKind(Kind.SET);
-            attribute.setOldValue(diff.getMatch().getRight().eGet(feature));
-            break;
-        case DELETE:
-            attribute.setKind(Kind.REMOVE);
-            break;
-        default:
-            break;
-        }
-
+        if(diff.getKind() == DifferenceKind.ADD) {
+        	attribute.setKind(Kind.ADD);
+        } else if(diff.getKind() == DifferenceKind.DELETE) {
+        	attribute.setKind(Kind.REMOVE);
+        } else if(diff.getKind() == DifferenceKind.CHANGE) {
+        	attribute.setKind(Kind.SET);
+        }       
         changeSet.getChanges().add(attribute);
-    }
-
-    private void processReferenceChangeSpec(ReferenceChangeSpec diff, ChangeSet changeSet) {
-
-        if (processIfDelete(diff, changeSet))
-            return;
-
-        if (processIfCreate(diff, changeSet))
-            return;
-
-        EObject original = diff.getMatch().getRight();
-        if (original == null) {
-            return; // A create operation will come
-        }
-        EObject object = diff.getMatch().getLeft();
-
-        if (object == null) {
-            return; // A delete operation will come
-        }
-
+    }    
+    
+    private void processReferenceChangeSpec(ReferenceChangeSpec diff) {
+    	if(processDeletion(diff)) return;
+    	if(processCreation(diff)) return;
+    	if(!checkPrecondition(diff,mapper)) return;
+    	
+    	if(diff.getKind() == DifferenceKind.MOVE) {
+			throw new IllegalArgumentException(diff.getKind() + "is not supported for References");
+		}
+    	
+        Id sourceId = createIdFromEObject(getModified(diff), mapper);
+        Id targetId = createIdFromEObject(diff.getValue(), mapper);
+        
         Reference reference = ModelFactory.eINSTANCE.createReference();
         reference.setFeature(diff.getReference());
-        reference.setSrc(createFromEObject(diff.getMatch().getLeft()));
-
-        Object target = object.eGet(diff.getReference());
-        if (target != null) {
-            if (diff.getMatch().getComparison().getMatch(diff.getValue()) != null && diff.getMatch().getComparison().getMatch(diff.getValue()).getLeft() == null)
-                return;
-            reference.setTrg(createFromEObject((EObject) diff.getValue()));
-        }
+        reference.setSrc(sourceId);
+        reference.setTrg(targetId);
         reference.setExecutable(true);
 
-        switch (diff.getKind()) {
-        case ADD:
-            reference.setKind(Kind.ADD);
-            break;
-        case CHANGE:
-            if (target == null) {
-                reference.setKind(Kind.UNSET);
-                reference.setOldTrg(createFromEObject((EObject) diff.getMatch().getRight().eGet(diff.getReference())));
-            } else {
-                reference.setKind(Kind.SET);
-                reference.setOldTrg(createFromEObject((EObject) diff.getMatch().getRight().eGet(diff.getReference())));
-            }
-            break;
-        case DELETE:
-            reference.setKind(Kind.REMOVE);
-            break;
-        case MOVE:
-            if (diff.getReference().isMany()) {
-                reference.setKind(Kind.ADD);
-            } else {
-                reference.setKind(Kind.SET);
-            }
-            break;
-        default:
-            break;
-        }
+        if(diff.getKind() == DifferenceKind.ADD) {
+        	reference.setKind(Kind.ADD);
+        } else if(diff.getKind() == DifferenceKind.DELETE) {
+        	reference.setKind(Kind.REMOVE);
+        } else if(diff.getKind() == DifferenceKind.CHANGE) {
+        	reference.setKind(Kind.SET);
+        }       
         changeSet.getChanges().add(reference);
+    }
+    
+    private boolean processDeletion(Diff diff) {
+    	
+    	EObject original = getOriginal(diff);
+		EObject modified = getModified(diff);
+        if(original == null) return false;
+        if(original != null && modified != null) return false;
+    	
+        Id deletedId = createIdFromEObject(original, mapper);
+        if(doNotTouch.contains(deletedId)) {
+        	return true;
+        }
+        
+        if(created.containsKey(deletedId)) {
+        	Create change = created.get(deletedId);
+        	changeSet.getChanges().remove(change);
+        	created.remove(deletedId);
+        	doNotTouch.add(deletedId);
+        }       
+        
+        Delete delete = ModelFactory.eINSTANCE.createDelete();
+        delete.setExecutable(true);
+        delete.setSrc(deletedId);
+        changeSet.getChanges().add(delete);
+        deleted.put(deletedId, delete);
+        
+    	return true;
+    }
+    
+    private boolean processCreation(Diff diff) {
+    	
+    	EObject original = getOriginal(diff);
+		EObject modified = getModified(diff);
+        if(modified == null) return false;
+        if(modified != null && original != null) return false;
+    	
+        Id createdId = createIdFromEObject(modified, mapper);
+        if(doNotTouch.contains(createdId)) {
+        	return true;
+        }
+        
+        if(deleted.containsKey(createdId)) {
+        	Delete change = deleted.get(createdId);
+        	changeSet.getChanges().remove(change);
+        	deleted.remove(createdId);
+        	doNotTouch.add(createdId);
+        }
+        
+        Create create = ModelFactory.eINSTANCE.createCreate();
+        create.setExecutable(true);
+        create.setSrc(createdId);
+        instertAllAttributes(modified, createdId, create);
+        instertAllReferences(modified, createdId, create);
+        changeSet.getChanges().add(create);
+        created.put(createdId, create);
+        
+    	return false;
     }
 
     @SuppressWarnings("unchecked")
-    private boolean processIfCreate(ReferenceChangeSpec diff, ChangeSet changeSet) {
-        EReference reference = diff.getReference();
-        if (reference.isContainment() && diff.getKind() != DifferenceKind.DELETE && diff.getKind() != DifferenceKind.MOVE) {
-        	if(skipDiff(diff)) return true;
-        	
-            EObject object = diff.getValue();
-            createChange(changeSet, reference, object);
-            return true;
-        }
-        return false;
-    }
-
-    private void createChange(ChangeSet changeSet, EReference reference, EObject object) {
-        Create create = ModelFactory.eINSTANCE.createCreate();
-        create.setExecutable(true);
-        create.setSrc(createFromEObject(object));
-        create.setFeature(reference);
-        create.setClazz(object.eClass());
-        create.setContainer(createFromEObject(object.eContainer()));
-        changeSet.getChanges().add(create);
-
-        for (EStructuralFeature f : object.eClass().getEAllStructuralFeatures()) {
-            // If this feature is determinative in calculating the identifier we miss it 'cause we will set it at
-            // the object creation.
-            if (mapper.isDeterminativeFeature(f)) {
-                continue;
-            }
-            if (f instanceof EReference) {
-                Object result = object.eGet(f);
-                if (result instanceof EList<?>) {
-                    for (EObject trg : (EList<EObject>) result) {
-                        insertReference(create, f, object, trg, changeSet, Kind.ADD);
-                    }
-                } else if (result != null) {
-                    EObject trg = (EObject) result;
-                    insertReference(create, f, object, trg, changeSet, Kind.SET);
+	private void instertAllAttributes(EObject modified, Id createdId, Create create) {
+		for (EAttribute attribute : modified.eClass().getEAllAttributes()) {
+        	if(attribute.isMany()) {
+        		EList<Object> list = (EList<Object>) modified.eGet(attribute);
+        		for (Object value : list) {
+        			insertAttribute(create, attribute, createdId, value, Kind.ADD);
                 }
-
-            }
-            if (f instanceof EAttribute) {
-                Object result = object.eGet(f);
-                if (result instanceof EList<?>) {
-                    for (Object trg : (EList<Object>) result) {
-                        insertAttribute(create, f, object, trg, changeSet, Kind.ADD);
-                    }
-                } else {
-                    Object trg = (Object) result;
-                    insertAttribute(create, f, object, trg, changeSet, Kind.SET);
-                }
-            }
-        }
-        created.put(mapper.getId(object), create);
-        mapToObject.put(create, object);
-    }
-
-    private void deleteChange(ChangeSet changeSet, Object id) {
-        Delete delete = ModelFactory.eINSTANCE.createDelete();
-        delete.setExecutable(true);
-        delete.setSrc(create(id));
-        changeSet.getChanges().add(delete);
-        deleted.put(id, delete);
-//        mapToObject.put(delete, object);
-    }
-    
-    private boolean processIfDelete(ReferenceChangeSpec diff, ChangeSet changeSet) {
-        if (diff.getKind() == DifferenceKind.DELETE && diff.getReference().isContainment()) {
-        	if(skipDiff(diff)) return true;
-        	
-            EObject object = diff.getValue();
-            Delete delete = ModelFactory.eINSTANCE.createDelete();
-            delete.setExecutable(true);
-            delete.setSrc(createFromEObject(object));
-            changeSet.getChanges().add(delete);
-            deleted.put(mapper.getId(object), delete);
-            mapToObject.put(delete, object);
-            return true;
-        }
-        return false;
-    }
-
-    private boolean skipDiff(ReferenceChangeSpec diff) {
-		EObject left = diff.getMatch().getLeft();
-		if(left == null) return false;
-		EObject right = diff.getMatch().getRight();
-		if(right == null) return false;
-		Object leftId = mapper.getId(left);
-		Object rightId = mapper.getId(right);
-		if(!leftId.equals(rightId)) return false;
-		
-		EReference reference = diff.getReference();
-		Object valueId = mapper.getId(diff.getValue());
-		
-		boolean leftContains = false, rightContains = false;
-		for(EObject obj : (EList<EObject>)left.eGet(reference)) {
-			if(mapper.getId(obj).equals(valueId)) {
-				leftContains = true;
-				break;
-			}
-		};
-
-		for(EObject obj : (EList<EObject>)right.eGet(reference)) {
-			if(mapper.getId(obj).equals(valueId)) {
-				rightContains = true;
-				break;
-			}
-		};
-		
-		if(leftContains && rightContains) 
-			return true;		
-    	return false;
+        	} else {
+        		Object value = modified.eGet(attribute);
+        		insertAttribute(create, attribute, createdId, value, Kind.SET);                
+        	}
+		}
 	}
 
-	private void insertReference(Create create, EStructuralFeature feature, EObject src, EObject trg, ChangeSet set,
-            Kind kind) {
+    @SuppressWarnings("unchecked")
+	private void instertAllReferences(EObject modified, Id createdId, Create create) {
+		for (EReference reference : modified.eClass().getEAllReferences()) {
+        	if(reference.isMany()) {
+        		EList<EObject> list = (EList<EObject>) modified.eGet(reference);
+        		for (EObject target : list) {
+        			Id targetId = createIdFromEObject(target, mapper);
+        			insertReference(create, reference, createdId, targetId, Kind.ADD);
+                }
+        	} else {
+        		EObject target = (EObject) modified.eGet(reference);
+        		Id targetId = createIdFromEObject(target, mapper);
+    			insertReference(create, reference, createdId, targetId, Kind.SET);                
+        	}
+		}
+	}
+    
+	private void insertReference(Create create, EReference feature, Id src, Id trg, Kind kind) {
         Reference reference = ModelFactory.eINSTANCE.createReference();
         reference.setFeature(feature);
-        reference.setSrc(createFromEObject(src));
-        reference.setTrg(createFromEObject(trg));
+        reference.setSrc(src);
+        reference.setTrg(src);
         reference.setExecutable(true);
         reference.setKind(kind);
-        set.getChanges().add(reference);
         create.getFeatures().add(reference);
+        changeSet.getChanges().add(reference);
     }
 
-    private void insertAttribute(Create create, EStructuralFeature feature, EObject src, Object trg, ChangeSet set, Kind kind) {
+    private void insertAttribute(Create create, EAttribute feature, Id src, Object value, Kind kind) {
+    	if(mapper.isDeterminativeFeature(feature)) return;
+    	
         Attribute attribute = ModelFactory.eINSTANCE.createAttribute();
         attribute.setFeature(feature);
-        attribute.setSrc(createFromEObject(src));
-        attribute.setValue(trg);
+        attribute.setSrc(src);
+        attribute.setValue(value);
         attribute.setExecutable(true);
         attribute.setKind(kind);
-        set.getChanges().add(attribute);
-        if(create != null)
-            create.getFeatures().add(attribute);
-    }
-
-    private Id create(int value) {
-        Id id = ModelFactory.eINSTANCE.createId();
-        id.setEInt(value);
-        id.setType(IdType.EINT);
-        return id;
-    }
-
-    private Id create(long value) {
-        Id id = ModelFactory.eINSTANCE.createId();
-        id.setELong(value);
-        id.setType(IdType.ELONG);
-        return id;
-    }
-
-    private Id create(String value) {
-        Id id = ModelFactory.eINSTANCE.createId();
-        id.setEString(value);
-        id.setType(IdType.ESTRING);
-        return id;
-    }
-
-    private Id create(Object value) {
-        if (value instanceof Integer) {
-            return create((int) value);
-        }
-        if (value instanceof Long) {
-            return create((long) value);
-        }
-        if (value instanceof String) {
-            return create((String) value);
-        }
-        return null;
-    }
-    
-    private Id createFromEObject(EObject object) {
-        Object value = mapper.getId(object);
-        return create(value);
+        create.getFeatures().add(attribute);
+        changeSet.getChanges().add(attribute);
     }    
 }
